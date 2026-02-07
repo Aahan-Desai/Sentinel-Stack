@@ -1,0 +1,15 @@
+import express from 'express';
+import { listUsers } from './user.controller.js';
+import { authMiddleware } from '../../shared/middleware/auth.middleware.js';
+import { requireRole } from '../../shared/middleware/rbac.middleware.js';
+
+const router = express.Router();
+
+router.get(
+  '/',
+  authMiddleware,
+  requireRole('admin'),
+  listUsers
+);
+
+export default router;
