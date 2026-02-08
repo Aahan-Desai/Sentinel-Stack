@@ -1,21 +1,22 @@
-import bcrypt from 'bcryptjs';
-import { User } from '../auth/user.model.js';
-import { Tenant } from '../tenants/tenant.model.js';
-import { ApiError } from '../../shared/errors/ApiError.js';
+import bcrypt from "bcryptjs";
+import { User } from "../auth/user.model.js";
+import { Tenant } from "../tenants/tenant.model.js";
+import { ApiError } from "../../shared/errors/ApiError.js";
 import {
   signAccessToken,
   signRefreshToken,
-  verifyRefreshToken
-} from '../../shared/utils/jwt.js';
+  verifyRefreshToken,
+} from "../../shared/utils/jwt.js";
 
 /**
  * REGISTER
  */
 export const register = async (req, res) => {
-  const { email, password, role = 'member', tenantSlug } = req.body;
-
+  const { email, password, role } = req.body;
+  const tenantSlug = req.headers["x-tenant-slug"];
+  
   if (!email || !password || !tenantSlug) {
-    throw new ApiError(400, 'Email, password and tenantSlug are required');
+    throw new ApiError(400, "Email, password and tenantSlug are required");
   }
 
   // Resolve or create tenant
@@ -24,18 +25,18 @@ export const register = async (req, res) => {
   if (!tenant) {
     tenant = await Tenant.create({
       name: tenantSlug,
-      slug: tenantSlug
+      slug: tenantSlug,
     });
   }
 
   // Prevent duplicate users inside same tenant
   const existingUser = await User.findOne({
     email,
-    tenantId: tenant._id
+    tenantId: tenant._id,
   });
 
   if (existingUser) {
-    throw new ApiError(409, 'User already exists in this tenant');
+    throw new ApiError(409, "User already exists in this tenant");
   }
 
   const hashedPassword = await bcrypt.hash(password, 12);
@@ -44,17 +45,17 @@ export const register = async (req, res) => {
     email,
     password: hashedPassword,
     role,
-    tenantId: tenant._id
+    tenantId: tenant._id,
   });
 
   const accessToken = signAccessToken(user);
   const refreshToken = signRefreshToken(user);
 
   res
-    .cookie('refreshToken', refreshToken, {
+    .cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      sameSite: 'strict',
-      secure: false // set true in production (HTTPS)
+      sameSite: "strict",
+      secure: false, // set true in production (HTTPS)
     })
     .status(201)
     .json({
@@ -63,8 +64,8 @@ export const register = async (req, res) => {
         id: user._id,
         email: user.email,
         role: user.role,
-        tenantId: tenant._id
-      }
+        tenantId: tenant._id,
+      },
     });
 };
 
@@ -73,32 +74,39 @@ export const register = async (req, res) => {
  */
 export const login = async (req, res) => {
   const { email, password } = req.body;
+  const tenantSlug = req.headers["x-tenant-slug"];
 
-  if (!email || !password) {
-    throw new ApiError(400, 'Email and password are required');
+  if (!email || !password || !tenantSlug) {
+    return res.status(400).json({
+      error: true,
+      message: "Email, password and tenantSlug are required",
+    });
   }
 
-  const user = await User.findOne({ email }).select('+password');
+  if (!email || !password) {
+    throw new ApiError(400, "Email and password are required");
+  }
 
+  const user = await User.findOne({ email }).select("+password");
 
   if (!user) {
-    throw new ApiError(401, 'Invalid credentials');
+    throw new ApiError(401, "Invalid credentials");
   }
 
   const isMatch = await bcrypt.compare(password, user.password);
 
   if (!isMatch) {
-    throw new ApiError(401, 'Invalid credentials');
+    throw new ApiError(401, "Invalid credentials");
   }
 
   const accessToken = signAccessToken(user);
   const refreshToken = signRefreshToken(user);
 
   res
-    .cookie('refreshToken', refreshToken, {
+    .cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      sameSite: 'strict',
-      secure: false
+      sameSite: "strict",
+      secure: false,
     })
     .json({
       accessToken,
@@ -106,8 +114,8 @@ export const login = async (req, res) => {
         id: user._id,
         email: user.email,
         role: user.role,
-        tenantId: user.tenantId
-      }
+        tenantId: user.tenantId,
+      },
     });
 };
 
@@ -118,7 +126,7 @@ export const refreshToken = async (req, res) => {
   const token = req.cookies.refreshToken;
 
   if (!token) {
-    throw new ApiError(401, 'Refresh token missing');
+    throw new ApiError(401, "Refresh token missing");
   }
 
   const payload = verifyRefreshToken(token);
@@ -126,7 +134,7 @@ export const refreshToken = async (req, res) => {
   const user = await User.findById(payload.userId);
 
   if (!user) {
-    throw new ApiError(401, 'Invalid refresh token');
+    throw new ApiError(401, "Invalid refresh token");
   }
 
   const newAccessToken = signAccessToken(user);
@@ -138,7 +146,7 @@ export const refreshToken = async (req, res) => {
  * LOGOUT
  */
 export const logout = async (req, res) => {
-  res.clearCookie('refreshToken').json({
-    message: 'Logged out successfully'
+  res.clearCookie("refreshToken").json({
+    message: "Logged out successfully",
   });
 };
