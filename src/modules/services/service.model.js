@@ -1,36 +1,31 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const serviceSchema = new mongoose.Schema(
   {
     tenantId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Tenant',
+      ref: "Tenant",
       required: true,
-      index: true
+      index: true,
     },
 
     name: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
     },
 
-    description: {
+    url: {
       type: String,
-      default: ''
+      required: true,
     },
 
     isActive: {
       type: Boolean,
-      default: true
-    }
+      default: true,
+    },
   },
   { timestamps: true }
 );
 
-serviceSchema.index(
-  { tenantId: 1, name: 1 },
-  { unique: true }
-);
-
-export const Service = mongoose.model('Service', serviceSchema);
+export const Service = mongoose.model("Service", serviceSchema);

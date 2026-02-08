@@ -1,6 +1,8 @@
 import { Service } from './service.model.js';
 import { getServiceStatus } from './service.status.service.js';
 import { ApiError } from '../../shared/errors/ApiError.js';
+import { createService as createServiceLogic } from "./service.service.js";
+
 
 export const getServiceStatusHandler = async (req, res) => {
   try {
@@ -31,23 +33,22 @@ export const getServiceStatusHandler = async (req, res) => {
   }
 };
 
+export const createService = async (req, res, next) => {
+  try {
+    const { name, url } = req.body;
 
-export const createService = async (req, res) => {
-  const { name, description } = req.body;
-  const tenantId = req.user.tenantId;
+    const service = await createServiceLogic({
+      tenantId: req.user.tenantId,
+      name,
+      url,
+    });
 
-  if (!name) {
-    throw new ApiError(400, 'Service name is required');
+    res.status(201).json(service);
+  } catch (error) {
+    next(error);
   }
-
-  const service = await Service.create({
-    tenantId,
-    name,
-    description
-  });
-
-  res.status(201).json({ service });
 };
+
 
 export const listServices = async (req, res) => {
   try {
