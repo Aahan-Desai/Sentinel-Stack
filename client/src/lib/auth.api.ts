@@ -1,12 +1,25 @@
-import { api } from "./api";
+import api from "./api";
 
-export type LoginPayload = {
+type LoginPayload = {
   email: string;
   password: string;
   tenantSlug: string;
 };
 
-export async function login(payload: LoginPayload) {
-  const res = await api.post("/auth/login", payload);
-  return res.data;
+export async function login({
+  email,
+  password,
+  tenantSlug,
+}: LoginPayload) {
+  const response = await api.post(
+    "/auth/login",
+    { email, password },
+    {
+      headers: {
+        "x-tenant-slug": tenantSlug,
+      },
+    }
+  );
+
+  return response.data;
 }

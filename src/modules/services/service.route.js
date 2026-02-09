@@ -1,7 +1,8 @@
 import express from 'express';
 import {
   createService,
-  listServices
+  listServicesController,
+  getServiceStatusHandler
 } from './service.controller.js';
 
 import { authMiddleware } from '../../shared/middleware/auth.middleware.js';
@@ -9,17 +10,13 @@ import { requireRole } from '../../shared/middleware/rbac.middleware.js';
 
 const router = express.Router();
 
-router.post(
-  '/',
-  authMiddleware,
-  requireRole('admin'),
-  createService
-);
+router.use(authMiddleware);
 
-router.get(
-  '/:serviceId/status',
-  authMiddleware,
-  listServices
-);
+router.get("/", listServicesController);
+
+router.post("/", requireRole("admin"), createService);
+
+router.get("/:serviceId/status", getServiceStatusHandler);
+
 
 export default router;

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { login as loginApi } from "../lib/auth.api.ts";
+import { login as loginApi } from "../lib/auth.api";
 
 type User = {
   email: string;
@@ -14,8 +14,13 @@ export function useAuth() {
     password: string,
     tenantSlug: string
   ) {
-    const data = await loginApi({ email, password, tenantSlug });
+    const data = await loginApi({
+      email,
+      password,
+      tenantSlug,
+    });
 
+    // persist auth state
     localStorage.setItem("accessToken", data.accessToken);
     localStorage.setItem("tenantSlug", tenantSlug);
 

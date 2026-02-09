@@ -1,56 +1,51 @@
 import { useState } from "react";
-import { useAuth } from "../../hooks/useAuth";
+import { useAuth } from "../../hooks/AuthContext";
 
 export default function LoginPage() {
   const { login } = useAuth();
 
+  const [tenantSlug, setTenantSlug] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [tenantSlug, setTenantSlug] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError("");
+    setError(null);
 
     try {
       await login(email, password, tenantSlug);
-    } catch {
-      setError("Invalid credentials");
+    } catch (err: any) {
+      setError(err.message || "Login failed");
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-sm mx-auto space-y-4">
-      <h1 className="text-xl font-bold">Login</h1>
-
-      {error && <p className="text-red-500">{error}</p>}
+    <form onSubmit={handleSubmit} style={{ maxWidth: 400 }}>
+      <h2>Login</h2>
 
       <input
-        placeholder="Tenant slug"
+        placeholder="Tenant Slug"
         value={tenantSlug}
         onChange={(e) => setTenantSlug(e.target.value)}
-        className="border p-2 w-full"
       />
 
       <input
         placeholder="Email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        className="border p-2 w-full"
       />
 
       <input
-        placeholder="Password"
         type="password"
+        placeholder="Password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-        className="border p-2 w-full"
       />
 
-      <button className="bg-black text-white px-4 py-2">
-        Login
-      </button>
+      <button type="submit">Login</button>
+
+      {error && <p style={{ color: "red" }}>{error}</p>}
     </form>
   );
 }

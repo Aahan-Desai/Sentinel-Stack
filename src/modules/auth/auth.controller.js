@@ -14,7 +14,7 @@ import {
 export const register = async (req, res) => {
   const { email, password, role } = req.body;
   const tenantSlug = req.headers["x-tenant-slug"];
-  
+
   if (!email || !password || !tenantSlug) {
     throw new ApiError(400, "Email, password and tenantSlug are required");
   }
@@ -77,17 +77,20 @@ export const login = async (req, res) => {
   const tenantSlug = req.headers["x-tenant-slug"];
 
   if (!email || !password || !tenantSlug) {
-    return res.status(400).json({
-      error: true,
-      message: "Email, password and tenantSlug are required",
-    });
+    throw new ApiError(400, "Email, password and tenantSlug are required");
   }
 
-  if (!email || !password) {
-    throw new ApiError(400, "Email and password are required");
+  // 1. Find tenant
+  const tenant = await Tenant.findOne({ slug: tenantSlug });
+  if (!tenant) {
+    throw new ApiError(404, "Tenant not found");
   }
 
-  const user = await User.findOne({ email }).select("+password");
+  // 2. Find user in that tenant
+  const user = await User.findOne({
+    email,
+    tenantId: tenant._id
+  }).select("+password");
 
   if (!user) {
     throw new ApiError(401, "Invalid credentials");
@@ -106,7 +109,7 @@ export const login = async (req, res) => {
     .cookie("refreshToken", refreshToken, {
       httpOnly: true,
       sameSite: "strict",
-      secure: false,
+      secure: false, // set true in production (HTTPS)
     })
     .json({
       accessToken,

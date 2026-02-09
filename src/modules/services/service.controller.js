@@ -1,9 +1,29 @@
 import { Service } from './service.model.js';
 import { getServiceStatus } from './service.status.service.js';
 import { ApiError } from '../../shared/errors/ApiError.js';
-import { createService as createServiceLogic } from "./service.service.js";
+import {
+  createService as createServiceLogic,
+  listServices as listServicesLogic
+} from "./service.service.js";
+
+export const listServicesController = async (req, res, next) => {
+  try {
+    const result = await listServicesLogic({
+      tenantId: req.user.tenantId,
+      page: Number(req.query.page || 1),
+      limit: Number(req.query.limit || 20),
+    });
+
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+};
 
 
+/**
+ * GET SERVICE STATUS
+ */
 export const getServiceStatusHandler = async (req, res) => {
   try {
     const { serviceId } = req.params;
@@ -33,6 +53,9 @@ export const getServiceStatusHandler = async (req, res) => {
   }
 };
 
+/**
+ * CREATE SERVICE
+ */
 export const createService = async (req, res, next) => {
   try {
     const { name, url } = req.body;
@@ -46,23 +69,5 @@ export const createService = async (req, res, next) => {
     res.status(201).json(service);
   } catch (error) {
     next(error);
-  }
-};
-
-
-export const listServices = async (req, res) => {
-  try {
-    const tenantId = req.user.tenantId;
-
-    const services = await Service.find({
-      tenantId,
-      isActive: true
-    });
-
-    res.json({ services });
-  } catch (error) {
-    res.status(500).json({
-      message: 'Failed to fetch services'
-    });
   }
 };
