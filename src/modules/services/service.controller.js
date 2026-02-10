@@ -3,8 +3,27 @@ import { getServiceStatus } from './service.status.service.js';
 import { ApiError } from '../../shared/errors/ApiError.js';
 import {
   createService as createServiceLogic,
-  listServices as listServicesLogic
+  listServices as listServicesLogic,
+  getServiceById as getServiceByIdLogic
 } from "./service.service.js";
+
+// ... (existing code omitted for brevity)
+
+/**
+ * GET SERVICE BY ID
+ */
+export const getServiceByIdController = async (req, res, next) => {
+  try {
+    const service = await getServiceByIdLogic({
+      serviceId: req.params.serviceId,
+      tenantId: req.user.tenantId,
+    });
+
+    res.json(service);
+  } catch (error) {
+    next(error);
+  }
+};
 
 export const listServicesController = async (req, res, next) => {
   try {

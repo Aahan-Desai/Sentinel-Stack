@@ -1,11 +1,17 @@
 import { Service } from "./service.model.js";
+import { ApiError } from "../../shared/errors/ApiError.js";
 
 /**
  * CREATE SERVICE
  */
 export const createService = async ({ tenantId, name, url }) => {
   if (!name || !url) {
-    throw new Error("Service name and URL are required");
+    throw new ApiError(400, "Service name and URL are required");
+  }
+
+  const existing = await Service.findOne({ tenantId, url });
+  if (existing) {
+    throw new ApiError(409, "A service with this URL already exists for this tenant");
   }
 
   const service = await Service.create({
@@ -45,4 +51,17 @@ export const listServices = async ({
       totalPages: Math.ceil(total / limit),
     },
   };
+};
+
+/**
+ * GET SERVICE BY ID
+ */
+export const getServiceById = async ({ serviceId, tenantId }) => {
+  const service = await Service.findOne({ _id: serviceId, tenantId });
+
+  if (!service) {
+    throw new ApiError(404, "Service not found");
+  }
+
+  return service;
 };

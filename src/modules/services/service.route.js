@@ -2,7 +2,8 @@ import express from 'express';
 import {
   createService,
   listServicesController,
-  getServiceStatusHandler
+  getServiceStatusHandler,
+  getServiceByIdController
 } from './service.controller.js';
 
 import { authMiddleware } from '../../shared/middleware/auth.middleware.js';
@@ -13,6 +14,7 @@ const router = express.Router();
 router.use(authMiddleware);
 
 router.get("/", listServicesController);
+router.get("/:serviceId", getServiceByIdController);
 
 router.post("/", requireRole("admin"), createService);
 

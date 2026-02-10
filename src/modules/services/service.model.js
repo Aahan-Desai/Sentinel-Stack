@@ -28,4 +28,7 @@ const serviceSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Prevent duplicate URLs within the same tenant
+serviceSchema.index({ tenantId: 1, url: 1 }, { unique: true });
+
 export const Service = mongoose.model("Service", serviceSchema);

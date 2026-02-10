@@ -1,15 +1,42 @@
 import api from "./api";
 import type { Service } from "../types/service";
 
+/**
+ * Fetch services for the current tenant
+ */
 export async function fetchServices(): Promise<Service[]> {
   const res = await api.get("/services");
-  return Array.isArray(res.data.services) ? res.data.services : [];
+
+  return Array.isArray(res.data.items) ? res.data.items : [];
 }
 
+/**
+ * Create a new service (admin only)
+ */
 export async function createService(payload: {
   name: string;
   url: string;
-}): Promise<Service> {  
+}): Promise<Service> {
   const res = await api.post("/services", payload);
-  return res.data.services;
+
+  return res.data;
+}
+
+/**
+ * Fetch a single service by ID
+ */
+export async function fetchServiceById(serviceId: string): Promise<Service> {
+  const res = await api.get(`/services/${serviceId}`);
+  return res.data;
+}
+
+/**
+ * Fetch service status and uptime
+ */
+export async function fetchServiceStatus(serviceId: string): Promise<{
+  status: 'up' | 'down' | 'unknown';
+  uptime: number | null;
+}> {
+  const res = await api.get(`/services/${serviceId}/status`);
+  return res.data;
 }
