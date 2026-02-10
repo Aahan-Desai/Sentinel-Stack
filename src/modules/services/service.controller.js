@@ -4,8 +4,27 @@ import { ApiError } from '../../shared/errors/ApiError.js';
 import {
   createService as createServiceLogic,
   listServices as listServicesLogic,
-  getServiceById as getServiceByIdLogic
+  getServiceById as getServiceByIdLogic,
+  getServiceHistory as getServiceHistoryLogic
 } from "./service.service.js";
+
+// ... (skipping down to the bottom of the file)
+
+/**
+ * GET SERVICE HISTORY
+ */
+export const getServiceHistoryHandler = async (req, res, next) => {
+  try {
+    const history = await getServiceHistoryLogic({
+      serviceId: req.params.serviceId,
+      tenantId: req.user.tenantId,
+    });
+
+    res.json(history);
+  } catch (error) {
+    next(error);
+  }
+};
 
 // ... (existing code omitted for brevity)
 

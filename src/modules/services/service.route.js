@@ -3,7 +3,8 @@ import {
   createService,
   listServicesController,
   getServiceStatusHandler,
-  getServiceByIdController
+  getServiceByIdController,
+  getServiceHistoryHandler
 } from './service.controller.js';
 
 import { authMiddleware } from '../../shared/middleware/auth.middleware.js';
@@ -15,6 +16,7 @@ router.use(authMiddleware);
 
 router.get("/", listServicesController);
 router.get("/:serviceId", getServiceByIdController);
+router.get("/:serviceId/history", getServiceHistoryHandler);
 
 router.post("/", requireRole("admin"), createService);
 

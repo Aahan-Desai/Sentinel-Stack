@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { fetchServiceStatus, fetchServiceById } from "../../lib/services.api";
+import { fetchServiceStatus, fetchServiceById, fetchServiceHistory } from "../../lib/services.api";
 import type { Service } from "../../types/service";
 import {
     ArrowLeft,
@@ -18,6 +18,7 @@ export default function ServiceDetailPage() {
 
     const [service, setService] = useState<Service | null>(null);
     const [status, setStatus] = useState<{ status: string; uptime: number | null } | null>(null);
+    const [history, setHistory] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -26,12 +27,14 @@ export default function ServiceDetailPage() {
             if (!id) return;
             try {
                 setLoading(true);
-                const [serviceData, statusData] = await Promise.all([
+                const [serviceData, statusData, historyData] = await Promise.all([
                     fetchServiceById(id),
-                    fetchServiceStatus(id)
+                    fetchServiceStatus(id),
+                    fetchServiceHistory(id)
                 ]);
                 setService(serviceData);
                 setStatus(statusData);
+                setHistory(historyData);
             } catch (err: any) {
                 setError("Synchronization failed. This service may have been decommissioned.");
             } finally {
@@ -61,7 +64,9 @@ export default function ServiceDetailPage() {
         </div>
     );
 
-    const currentStatus = status?.status || 'unknown';
+    const averageLatency = history.length > 0
+        ? Math.round(history.reduce((acc, curr) => acc + curr.responseTime, 0) / history.length)
+        : 0;
 
     return (
         <div className="min-h-screen bg-slate-50 font-sans text-slate-900 leading-normal">
@@ -83,10 +88,10 @@ export default function ServiceDetailPage() {
                         <div>
                             <div className="flex items-center gap-3 mb-2">
                                 <h1 className="text-4xl font-bold tracking-tight text-slate-900">{service.name}</h1>
-                                <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.15em] shadow-sm ${currentStatus === 'up' ? 'bg-green-100 text-green-700' :
-                                        currentStatus === 'down' ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-500'
+                                <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.15em] shadow-sm ${status?.status === 'up' ? 'bg-green-100 text-green-700' :
+                                        status?.status === 'down' ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-500'
                                     }`}>
-                                    {currentStatus === 'up' ? 'Online' : currentStatus === 'down' ? 'Disrupted' : 'Syncing'}
+                                    {status?.status === 'up' ? 'Online' : status?.status === 'down' ? 'Disrupted' : 'Syncing'}
                                 </span>
                             </div>
                             <p className="text-slate-400 font-mono text-sm tracking-tight">{service.url}</p>
@@ -123,11 +128,13 @@ export default function ServiceDetailPage() {
                             <Clock className="w-4 h-4" />
                             <span className="text-[10px] font-bold uppercase tracking-widest">Mean Response</span>
                         </div>
-                        <p className="text-4xl font-bold text-slate-900 mb-1 italic">142ms</p>
-                        <p className="text-xs text-slate-400 font-medium">Average from 12 regions</p>
+                        <p className="text-4xl font-bold text-slate-900 mb-1 italic">
+                            {averageLatency > 0 ? `${averageLatency}ms` : '---'}
+                        </p>
+                        <p className="text-xs text-slate-400 font-medium">Average from recent logs</p>
                     </div>
 
-                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 bg-slate-950 border-none relative overflow-hidden group">
+                    <div className="p-6 rounded-2xl shadow-sm bg-slate-950 border-none relative overflow-hidden group">
                         <div className="relative z-10 text-white">
                             <div className="flex items-center gap-2 mb-4 text-slate-500 group-hover:text-indigo-400 transition-colors">
                                 <ShieldCheck className="w-4 h-4" />
@@ -140,32 +147,41 @@ export default function ServiceDetailPage() {
                     </div>
                 </div>
 
-                {/* HISTORY PLOT PLACEHOLDER */}
+                {/* HISTORY PLOT - NOW REAL */}
                 <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
                     <div className="flex items-center justify-between mb-8">
                         <h3 className="text-lg font-bold text-slate-900 tracking-tight">Availability Timeline</h3>
                         <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
-                            <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-none">Healthy State</span>
+                            <div className={`w-2 h-2 rounded-full ${status?.status === 'up' ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-none">
+                                {status?.status === 'up' ? 'Healthy State' : 'Incident Active'}
+                            </span>
                         </div>
                     </div>
 
                     <div className="space-y-6">
-                        {/* Visual "Timeline" Representation */}
                         <div className="flex gap-1 h-32 items-end">
-                            {Array.from({ length: 40 }).map((_, i) => (
-                                <div
-                                    key={i}
-                                    className="flex-1 bg-slate-100 rounded-t-sm hover:bg-indigo-500 transition-all cursor-crosshair"
-                                    style={{ height: `${20 + Math.random() * 80}%` }}
-                                ></div>
-                            ))}
+                            {history.length === 0 ? (
+                                <div className="w-full flex items-center justify-center bg-slate-50 rounded-xl text-slate-400 text-sm font-medium border-2 border-dashed border-slate-200">
+                                    Awaiting initial telemetry feed...
+                                </div>
+                            ) : (
+                                history.slice().reverse().map((item, i) => (
+                                    <div
+                                        key={i}
+                                        title={`${item.status === 'up' ? 'Online' : 'Down'} - ${item.responseTime}ms at ${new Date(item.checkedAt).toLocaleTimeString()}`}
+                                        className={`flex-1 rounded-t-sm transition-all cursor-crosshair ${item.status === 'up' ? 'bg-indigo-500/30 hover:bg-indigo-500' : 'bg-red-500/30 hover:bg-red-500'
+                                            }`}
+                                        style={{ height: `${Math.max(15, Math.min(100, (item.responseTime / 1000) * 100))}%` }}
+                                    ></div>
+                                ))
+                            )}
                         </div>
 
                         <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] pt-4 border-t border-slate-100 leading-none">
-                            <span>Feb 09, 16:00</span>
+                            <span>Earliest Sample</span>
                             <span>Live Intelligence Feed</span>
-                            <span>Feb 10, 16:00</span>
+                            <span>Latest Activity</span>
                         </div>
                     </div>
                 </div>

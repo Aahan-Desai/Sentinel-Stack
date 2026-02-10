@@ -23,6 +23,14 @@ export async function createService(payload: {
 }
 
 /**
+ * Fetch historical health checks for a service
+ */
+export async function fetchServiceHistory(serviceId: string): Promise<any[]> {
+  const res = await api.get(`/services/${serviceId}/history`);
+  return res.data;
+}
+
+/**
  * Fetch a single service by ID
  */
 export async function fetchServiceById(serviceId: string): Promise<Service> {

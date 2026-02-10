@@ -1,4 +1,6 @@
 import { Service } from "./service.model.js";
+import { Check } from "../checks/check.model.js";
+import { CheckResult } from "../results/checkResult.model.js";
 import { ApiError } from "../../shared/errors/ApiError.js";
 
 /**
@@ -18,6 +20,13 @@ export const createService = async ({ tenantId, name, url }) => {
     tenantId,
     name,
     url,
+  });
+
+  // Provision a default check for this service
+  await Check.create({
+    serviceId: service._id,
+    url: service.url,
+    interval: 60, // Default to 60 seconds
   });
 
   return service;
@@ -64,4 +73,23 @@ export const getServiceById = async ({ serviceId, tenantId }) => {
   }
 
   return service;
+};
+
+/**
+ * GET SERVICE HISTORY
+ */
+export const getServiceHistory = async ({ serviceId, tenantId, limit = 50 }) => {
+  const service = await Service.findOne({ _id: serviceId, tenantId });
+  if (!service) {
+    throw new ApiError(404, "Service not found");
+  }
+
+  const check = await Check.findOne({ serviceId: service._id });
+  if (!check) return [];
+
+  const results = await CheckResult.find({ checkId: check._id })
+    .sort({ checkedAt: -1 })
+    .limit(limit);
+
+  return results;
 };
