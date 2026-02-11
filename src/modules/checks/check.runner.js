@@ -3,9 +3,6 @@ import { CheckResult } from '../results/checkResult.model.js';
 import { Incident } from '../incidents/incident.model.js';
 import { Service } from '../services/service.model.js';
 
-/**
- * Execute a single health check
- */
 const executeCheck = async (check) => {
     const start = Date.now();
     let status = 'down';
@@ -32,7 +29,6 @@ const executeCheck = async (check) => {
     } finally {
         const responseTime = Date.now() - start;
 
-        // Save result
         await CheckResult.create({
             checkId: check._id,
             status,
@@ -44,20 +40,20 @@ const executeCheck = async (check) => {
         // INCIDENT LOGIC
         try {
             if (status === 'up') {
-                // Resolution: Check for any active incidents for this service and close them
+               
                 await Incident.updateMany(
                     { serviceId: check.serviceId, status: 'active' },
                     { status: 'resolved', resolvedAt: new Date() }
                 );
             } else {
-                // Outage: Check if an active incident already exists
+                
                 const existingIncident = await Incident.findOne({
                     serviceId: check.serviceId,
                     status: 'active'
                 });
 
                 if (!existingIncident) {
-                    // Fetch service details to get tenantId and name
+                   
                     const service = await Service.findById(check.serviceId);
                     if (service) {
                         await Incident.create({
@@ -80,9 +76,7 @@ const executeCheck = async (check) => {
     }
 };
 
-/**
- * Main runner loop
- */
+
 export const startCheckRunner = () => {
     console.log('🚀 Health Check Runner initialized');
 

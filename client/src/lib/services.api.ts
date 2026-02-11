@@ -48,3 +48,32 @@ export async function fetchServiceStatus(serviceId: string): Promise<{
   const res = await api.get(`/services/${serviceId}/status`);
   return res.data;
 }
+
+/**
+ * Update an existing service (admin only)
+ */
+export async function updateService(
+  serviceId: string,
+  payload: { name?: string; url?: string }
+): Promise<Service> {
+  const res = await api.patch(`/services/${serviceId}`, payload);
+  return res.data;
+}
+
+/**
+ * Delete a service and its history (admin only)
+ */
+export async function deleteService(serviceId: string): Promise<void> {
+  await api.delete(`/services/${serviceId}`);
+}
+
+/**
+ * Fetch global workspace stats
+ */
+export async function fetchGlobalStats(): Promise<{
+  globalUptime: number;
+  avgLatency: number;
+}> {
+  const res = await api.get("/services/stats/global");
+  return res.data;
+}

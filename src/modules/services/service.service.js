@@ -1,7 +1,9 @@
 import { Service } from "./service.model.js";
 import { Check } from "../checks/check.model.js";
 import { CheckResult } from "../results/checkResult.model.js";
+import { Incident } from "../incidents/incident.model.js";
 import { ApiError } from "../../shared/errors/ApiError.js";
+import { getBatchServiceStatus } from "./service.status.service.js";
 
 /**
  * CREATE SERVICE
@@ -51,8 +53,21 @@ export const listServices = async ({
     Service.countDocuments({ tenantId }),
   ]);
 
+  // Enrich with status
+  const serviceIds = services.map(s => s._id);
+  const statusMap = await getBatchServiceStatus(serviceIds);
+
+  const enrichedServices = services.map(s => {
+    const statusData = statusMap[s._id.toString()] || { status: 'unknown', uptime: null };
+    return {
+      ...s.toObject(),
+      status: statusData.status,
+      uptime: statusData.uptime
+    };
+  });
+
   return {
-    items: services,
+    items: enrichedServices,
     meta: {
       total,
       page,
@@ -92,4 +107,42 @@ export const getServiceHistory = async ({ serviceId, tenantId, limit = 50 }) => 
     .limit(limit);
 
   return results;
+};
+
+/**
+ * UPDATE SERVICE
+ */
+export const updateService = async ({ serviceId, tenantId, name, url }) => {
+  const service = await Service.findOne({ _id: serviceId, tenantId });
+  if (!service) throw new ApiError(404, "Service not found");
+
+  if (name) service.name = name;
+  if (url) {
+    service.url = url;
+    // Sync the check URL as well
+    await Check.updateOne({ serviceId: service._id }, { url });
+  }
+
+  await service.save();
+  return service;
+};
+
+/**
+ * DELETE SERVICE (Full Cleanup)
+ */
+export const deleteService = async ({ serviceId, tenantId }) => {
+  const service = await Service.findOne({ _id: serviceId, tenantId });
+  if (!service) throw new ApiError(404, "Service not found");
+
+  const check = await Check.findOne({ serviceId: service._id });
+
+  // Cascade delete everything related to this service
+  await Promise.all([
+    Service.deleteOne({ _id: service._id }),
+    Check.deleteOne({ serviceId: service._id }),
+    CheckResult.deleteMany({ checkId: check?._id }),
+    Incident.deleteMany({ serviceId: service._id })
+  ]);
+
+  return { message: "Service and all associated data purged successfully" };
 };

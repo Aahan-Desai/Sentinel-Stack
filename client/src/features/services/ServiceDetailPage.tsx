@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
-import { fetchServiceStatus, fetchServiceById, fetchServiceHistory } from "../../lib/services.api";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import {
+    fetchServiceStatus,
+    fetchServiceById,
+    fetchServiceHistory,
+    updateService,
+    deleteService
+} from "../../lib/services.api";
 import type { Service } from "../../types/service";
 import {
     ArrowLeft,
@@ -10,17 +16,28 @@ import {
     ShieldCheck,
     RefreshCcw,
     Zap,
-    Settings
+    Settings,
+    X,
+    Trash2,
+    Save
 } from "lucide-react";
 
 export default function ServiceDetailPage() {
     const { id } = useParams<{ id: string }>();
+    const navigate = useNavigate();
 
     const [service, setService] = useState<Service | null>(null);
     const [status, setStatus] = useState<{ status: string; uptime: number | null } | null>(null);
     const [history, setHistory] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+    // Settings States
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const [editName, setEditName] = useState("");
+    const [editUrl, setEditUrl] = useState("");
+    const [saving, setSaving] = useState(false);
+    const [isRebooting, setIsRebooting] = useState(false);
 
     useEffect(() => {
         async function loadData() {
@@ -35,6 +52,8 @@ export default function ServiceDetailPage() {
                 setService(serviceData);
                 setStatus(statusData);
                 setHistory(historyData);
+                setEditName(serviceData.name);
+                setEditUrl(serviceData.url);
             } catch (err: any) {
                 setError("Synchronization failed. This service may have been decommissioned.");
             } finally {
@@ -43,6 +62,36 @@ export default function ServiceDetailPage() {
         }
         loadData();
     }, [id]);
+
+    const handleUpdate = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!id || !service) return;
+        setSaving(true);
+        try {
+            const updated = await updateService(id, { name: editName, url: editUrl });
+            setService(updated);
+            setIsSettingsOpen(false);
+        } catch (err) {
+            alert("Failed to update service profile.");
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleDelete = async () => {
+        if (!id || !window.confirm("CRITICAL: This will purge all historical data and logs for this service. Proceed?")) return;
+        try {
+            await deleteService(id);
+            navigate("/");
+        } catch (err) {
+            alert("Decommissioning process failed.");
+        }
+    };
+
+    const handleReboot = () => {
+        setIsRebooting(true);
+        setTimeout(() => setIsRebooting(false), 3000);
+    };
 
     if (loading) return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -88,10 +137,11 @@ export default function ServiceDetailPage() {
                         <div>
                             <div className="flex items-center gap-3 mb-2">
                                 <h1 className="text-4xl font-bold tracking-tight text-slate-900">{service.name}</h1>
-                                <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.15em] shadow-sm ${status?.status === 'up' ? 'bg-green-100 text-green-700' :
-                                        status?.status === 'down' ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-500'
+                                <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.15em] shadow-sm ${isRebooting ? 'bg-amber-100 text-amber-700' :
+                                        status?.status === 'up' ? 'bg-green-100 text-green-700' :
+                                            status?.status === 'down' ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-500'
                                     }`}>
-                                    {status?.status === 'up' ? 'Online' : status?.status === 'down' ? 'Disrupted' : 'Syncing'}
+                                    {isRebooting ? 'Rebooting...' : status?.status === 'up' ? 'Online' : status?.status === 'down' ? 'Disrupted' : 'Syncing'}
                                 </span>
                             </div>
                             <p className="text-slate-400 font-mono text-sm tracking-tight">{service.url}</p>
@@ -99,13 +149,21 @@ export default function ServiceDetailPage() {
                     </div>
 
                     <div className="flex gap-3">
-                        <button className="px-5 py-2.5 bg-white border border-slate-200 rounded-xl font-bold text-sm hover:bg-slate-50 transition-all shadow-sm flex items-center gap-2">
+                        <button
+                            onClick={() => setIsSettingsOpen(true)}
+                            className="px-5 py-2.5 bg-white border border-slate-200 rounded-xl font-bold text-sm hover:bg-slate-50 transition-all shadow-sm flex items-center gap-2"
+                        >
                             <Settings className="w-4 h-4" />
                             Configure Check
                         </button>
-                        <button className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/10 flex items-center gap-2">
-                            <Zap className="w-4 h-4" />
-                            Trigger Reboot
+                        <button
+                            onClick={handleReboot}
+                            disabled={isRebooting}
+                            className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all shadow-lg flex items-center gap-2 ${isRebooting ? 'bg-amber-500 text-white cursor-wait' : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-600/10'
+                                }`}
+                        >
+                            <Zap className={`w-4 h-4 ${isRebooting ? 'animate-pulse' : ''}`} />
+                            {isRebooting ? 'Resetting Nodes' : 'Trigger Reboot'}
                         </button>
                     </div>
                 </div>
@@ -186,6 +244,62 @@ export default function ServiceDetailPage() {
                     </div>
                 </div>
             </main>
+
+            {/* SETTINGS MODAL */}
+            {isSettingsOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/20 backdrop-blur-md animate-in fade-in duration-300">
+                    <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden border border-white/20 animate-in zoom-in-95 duration-300">
+                        <div className="p-8 border-b border-slate-100 flex items-center justify-between">
+                            <div>
+                                <h3 className="text-xl font-bold">Service Configuration</h3>
+                                <p className="text-xs text-slate-400 font-medium uppercase tracking-widest mt-1">Infrastructure Maintenance</p>
+                            </div>
+                            <button onClick={() => setIsSettingsOpen(false)} className="p-2 hover:bg-slate-50 rounded-xl transition-colors">
+                                <X className="w-5 h-5 text-slate-400" />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleUpdate} className="p-8 space-y-6">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Identified As</label>
+                                <input
+                                    value={editName}
+                                    onChange={(e) => setEditName(e.target.value)}
+                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Target Endpoint</label>
+                                <input
+                                    value={editUrl}
+                                    onChange={(e) => setEditUrl(e.target.value)}
+                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-medium"
+                                />
+                            </div>
+
+                            <div className="pt-4 flex flex-col gap-3">
+                                <button
+                                    type="submit"
+                                    disabled={saving}
+                                    className="w-full py-3 bg-slate-950 text-white rounded-xl font-bold text-sm hover:bg-slate-800 transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50"
+                                >
+                                    {saving ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                                    Synchronize Changes
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={handleDelete}
+                                    className="w-full py-3 bg-red-50 text-red-600 rounded-xl font-bold text-sm hover:bg-red-100 transition-all flex items-center justify-center gap-2"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                    Purge Service Instance
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { fetchServices, createService } from "../../lib/services.api";
+import { fetchServices, createService, fetchGlobalStats } from "../../lib/services.api";
 import { useAuth } from "../../hooks/AuthContext";
 import type { Service } from "../../types/service";
 import {
@@ -13,13 +13,15 @@ import {
   Bell,
   Settings,
   ShieldCheck,
-  Activity
+  Activity,
+  RefreshCcw
 } from "lucide-react";
 
 export default function DashboardPage() {
   const { user, logout } = useAuth();
 
   const [services, setServices] = useState<Service[]>([]);
+  const [globalStats, setGlobalStats] = useState({ globalUptime: 0, avgLatency: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,8 +34,12 @@ export default function DashboardPage() {
   async function loadServices() {
     try {
       setLoading(true);
-      const data = await fetchServices();
+      const [data, stats] = await Promise.all([
+        fetchServices(),
+        fetchGlobalStats()
+      ]);
       setServices(data);
+      setGlobalStats(stats);
     } catch {
       setError("Failed to synchronize with server. Please refresh.");
     } finally {
@@ -57,6 +63,9 @@ export default function DashboardPage() {
       setServices((prev) => [newService, ...prev]);
       setName("");
       setUrl("");
+      // Refresh global stats after creation
+      const stats = await fetchGlobalStats();
+      setGlobalStats(stats);
     } catch (err: any) {
       if (err.response?.status === 409) {
         setCreateError("A service with this endpoint already exists in your workspace.");
@@ -219,11 +228,11 @@ export default function DashboardPage() {
                 <div className="h-px bg-slate-800"></div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm font-bold text-green-400 font-sans italic">100%</p>
+                    <p className="text-sm font-bold text-green-400 font-sans italic">{globalStats.globalUptime}%</p>
                     <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest text-slate-500 font-sans">Global Uptime</p>
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-slate-300 font-sans italic">0 ms</p>
+                    <p className="text-sm font-bold text-slate-300 font-sans italic">{globalStats.avgLatency} ms</p>
                     <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest text-slate-500 font-sans">Avg Latency</p>
                   </div>
                 </div>
@@ -235,10 +244,16 @@ export default function DashboardPage() {
           <div className="xl:col-span-8 space-y-6">
             <div className="flex items-center justify-between mb-2">
               <h3 className="font-bold text-slate-500 text-xs uppercase tracking-widest leading-none">Active Watchlist</h3>
-              <span className="text-[10px] font-bold text-slate-300 italic leading-none pr-1">Auto-refreshing every 60s</span>
+              <button
+                onClick={loadServices}
+                className="text-[10px] font-bold text-slate-300 hover:text-indigo-400 transition-colors flex items-center gap-1 leading-none pr-1"
+              >
+                <RefreshCcw className={`w-2.5 h-2.5 ${loading ? 'animate-spin' : ''}`} />
+                Refresh Data
+              </button>
             </div>
 
-            {loading ? (
+            {loading && services.length === 0 ? (
               <div className="grid gap-4">
                 {[1, 2, 3].map(i => (
                   <div key={i} className="h-24 bg-white rounded-2xl border border-slate-100 animate-pulse"></div>
@@ -279,14 +294,24 @@ export default function DashboardPage() {
                       <div className="hidden sm:block text-right">
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 leading-none">Status</p>
                         <div className="flex items-center justify-end gap-2 leading-none">
-                          <div className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>
-                          <span className="text-xs font-bold text-slate-700">Healthy</span>
+                          <div className={`w-1.5 h-1.5 rounded-full ${service.status === 'up' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' :
+                              service.status === 'down' ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]' :
+                                'bg-slate-300'
+                            }`}></div>
+                          <span className={`text-xs font-bold ${service.status === 'up' ? 'text-slate-700' :
+                              service.status === 'down' ? 'text-red-600' :
+                                'text-slate-400'
+                            }`}>
+                            {service.status === 'up' ? 'Healthy' : service.status === 'down' ? 'Disrupted' : 'Syncing'}
+                          </span>
                         </div>
                       </div>
 
                       <div className="hidden md:block text-right">
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 leading-none px-1 text-slate-400 font-sans">Availability</p>
-                        <p className="text-xs font-bold text-slate-900 italic leading-none font-sans italic font-bold">99.98%</p>
+                        <p className="text-xs font-bold text-slate-900 italic leading-none font-sans">
+                          {service.uptime !== null ? `${service.uptime}%` : '---'}
+                        </p>
                       </div>
 
                       <div className="p-2 bg-slate-50 group-hover:bg-indigo-600 rounded-lg group-hover:text-white transition-all text-slate-400">
