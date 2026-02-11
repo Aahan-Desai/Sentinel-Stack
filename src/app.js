@@ -9,6 +9,7 @@ import { requireRole } from "./shared/middleware/rbac.middleware.js";
 import authRoutes from "./modules/auth/auth.routes.js";
 import userRoutes from "./modules/auth/user.routes.js";
 import serviceRoutes from "./modules/services/service.route.js";
+import incidentRoutes from "./modules/incidents/incident.route.js";
 
 import { errorHandler } from "./shared/middleware/error.middleware.js";
 
@@ -45,6 +46,7 @@ app.use(tenantMiddleware);
  */
 app.use("/users", userRoutes);
 app.use("/services", serviceRoutes);
+app.use("/incidents", incidentRoutes);
 
 /**
  * Health checks

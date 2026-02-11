@@ -86,14 +86,14 @@ export default function DashboardPage() {
           </div>
 
           <div className="hidden md:flex items-center gap-1 text-sm font-medium">
-            <button className="px-3 py-2 bg-slate-100 text-indigo-600 rounded-lg flex items-center gap-2">
+            <Link to="/" className="px-3 py-2 bg-slate-100 text-indigo-600 rounded-lg flex items-center gap-2">
               <LayoutDashboard className="w-4 h-4" />
               Overview
-            </button>
-            <button className="px-3 py-2 text-slate-500 hover:text-slate-900 transition-colors flex items-center gap-2">
+            </Link>
+            <Link to="/incidents" className="px-3 py-2 text-slate-500 hover:text-slate-900 transition-colors flex items-center gap-2">
               <Activity className="w-4 h-4" />
               Incidents
-            </button>
+            </Link>
           </div>
         </div>
 

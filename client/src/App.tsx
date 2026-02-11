@@ -2,7 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "./hooks/AuthContext";
 import LoginPage from "./features/auth/LoginPage";
 import DashboardPage from "./features/dashboard/DashBoardPage";
-import ServiceDetailPage from "./features/services/ServiceDetailPage.tsx";
+import ServiceDetailPage from "./features/services/ServiceDetailPage";
+import IncidentsPage from "./features/incidents/IncidentsPage";
 
 function App() {
   const { isAuthenticated } = useAuth();
@@ -16,6 +17,7 @@ function App() {
       <Routes>
         <Route path="/" element={<DashboardPage />} />
         <Route path="/services/:id" element={<ServiceDetailPage />} />
+        <Route path="/incidents" element={<IncidentsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

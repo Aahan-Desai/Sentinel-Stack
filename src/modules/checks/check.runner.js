@@ -1,11 +1,17 @@
 import { Check } from './check.model.js';
 import { CheckResult } from '../results/checkResult.model.js';
+import { Incident } from '../incidents/incident.model.js';
+import { Service } from '../services/service.model.js';
 
 /**
  * Execute a single health check
  */
 const executeCheck = async (check) => {
     const start = Date.now();
+    let status = 'down';
+    let errorMsg = '';
+    let statusCode = 0;
+
     try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), check.timeout || 5000);
@@ -16,24 +22,59 @@ const executeCheck = async (check) => {
         });
 
         clearTimeout(timeoutId);
-        const responseTime = Date.now() - start;
-
-        await CheckResult.create({
-            checkId: check._id,
-            status: response.ok ? 'up' : 'down',
-            responseTime,
-            statusCode: response.status,
-        });
+        statusCode = response.status;
+        status = response.ok ? 'up' : 'down';
+        if (!response.ok) errorMsg = `HTTP ${response.status} Error`;
 
     } catch (error) {
+        status = 'down';
+        errorMsg = error.name === 'AbortError' ? 'Timeout' : error.message;
+    } finally {
         const responseTime = Date.now() - start;
+
+        // Save result
         await CheckResult.create({
             checkId: check._id,
-            status: 'down',
+            status,
             responseTime,
-            error: error.name === 'AbortError' ? 'Timeout' : error.message,
+            statusCode,
+            error: errorMsg,
         });
-    } finally {
+
+        // INCIDENT LOGIC
+        try {
+            if (status === 'up') {
+                // Resolution: Check for any active incidents for this service and close them
+                await Incident.updateMany(
+                    { serviceId: check.serviceId, status: 'active' },
+                    { status: 'resolved', resolvedAt: new Date() }
+                );
+            } else {
+                // Outage: Check if an active incident already exists
+                const existingIncident = await Incident.findOne({
+                    serviceId: check.serviceId,
+                    status: 'active'
+                });
+
+                if (!existingIncident) {
+                    // Fetch service details to get tenantId and name
+                    const service = await Service.findById(check.serviceId);
+                    if (service) {
+                        await Incident.create({
+                            serviceId: service._id,
+                            tenantId: service.tenantId,
+                            serviceName: service.name,
+                            error: errorMsg,
+                            status: 'active'
+                        });
+                        console.log(`⚠️ Incident opened for ${service.name}`);
+                    }
+                }
+            }
+        } catch (incError) {
+            console.error('Failed to process incident logic:', incError);
+        }
+
         check.lastCheckedAt = new Date();
         await check.save();
     }
@@ -54,8 +95,7 @@ export const startCheckRunner = () => {
 
             console.log(`📡 Running health checks for ${activeChecks.length} services...`);
 
-            // Run checks in parallel with a small delay between batches if needed, 
-            // but for now simple Promise.all is fine for a SaaS starter.
+            // Run checks in parallel
             await Promise.all(activeChecks.map(check => executeCheck(check)));
 
         } catch (error) {
