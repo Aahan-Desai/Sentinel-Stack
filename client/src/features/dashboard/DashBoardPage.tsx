@@ -14,7 +14,8 @@ import {
   Settings,
   ShieldCheck,
   Activity,
-  RefreshCcw
+  RefreshCcw,
+  Users
 } from "lucide-react";
 
 export default function DashboardPage() {
@@ -63,7 +64,7 @@ export default function DashboardPage() {
       setServices((prev) => [newService, ...prev]);
       setName("");
       setUrl("");
-      // Refresh global stats after creation
+
       const stats = await fetchGlobalStats();
       setGlobalStats(stats);
     } catch (err: any) {
@@ -87,12 +88,12 @@ export default function DashboardPage() {
       {/* TOP NAVIGATION BAR */}
       <nav className="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between sticky top-0 z-30">
         <div className="flex items-center gap-8">
-          <div className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2">
             <div className="p-1.5 bg-indigo-600 rounded-lg text-white">
               <ShieldCheck className="w-5 h-5" />
             </div>
             <span className="font-bold tracking-tight text-lg text-slate-900">Sentinel</span>
-          </div>
+          </Link>
 
           <div className="hidden md:flex items-center gap-1 text-sm font-medium">
             <Link to="/" className="px-3 py-2 bg-slate-100 text-indigo-600 rounded-lg flex items-center gap-2">
@@ -102,6 +103,10 @@ export default function DashboardPage() {
             <Link to="/incidents" className="px-3 py-2 text-slate-500 hover:text-slate-900 transition-colors flex items-center gap-2">
               <Activity className="w-4 h-4" />
               Incidents
+            </Link>
+            <Link to="/team" className="px-3 py-2 text-slate-500 hover:text-slate-900 transition-colors flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              Team
             </Link>
           </div>
         </div>
@@ -178,7 +183,7 @@ export default function DashboardPage() {
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[11px] font-bold uppercase tracking-widest text-slate-400 ml-1 text-slate-400">Health Check URL</label>
+                      <label className="text-[11px] font-bold uppercase tracking-widest ml-1 text-slate-400">Health Check URL</label>
                       <input
                         placeholder="https://api.sentinel.io/health"
                         value={url}
@@ -229,11 +234,11 @@ export default function DashboardPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm font-bold text-green-400 font-sans italic">{globalStats.globalUptime}%</p>
-                    <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest text-slate-500 font-sans">Global Uptime</p>
+                    <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest font-sans">Global Uptime</p>
                   </div>
                   <div>
                     <p className="text-sm font-bold text-slate-300 font-sans italic">{globalStats.avgLatency} ms</p>
-                    <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest text-slate-500 font-sans">Avg Latency</p>
+                    <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest font-sans">Avg Latency</p>
                   </div>
                 </div>
               </div>
@@ -295,12 +300,12 @@ export default function DashboardPage() {
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 leading-none">Status</p>
                         <div className="flex items-center justify-end gap-2 leading-none">
                           <div className={`w-1.5 h-1.5 rounded-full ${service.status === 'up' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' :
-                              service.status === 'down' ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]' :
-                                'bg-slate-300'
+                            service.status === 'down' ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]' :
+                              'bg-slate-300'
                             }`}></div>
                           <span className={`text-xs font-bold ${service.status === 'up' ? 'text-slate-700' :
-                              service.status === 'down' ? 'text-red-600' :
-                                'text-slate-400'
+                            service.status === 'down' ? 'text-red-600' :
+                              'text-slate-400'
                             }`}>
                             {service.status === 'up' ? 'Healthy' : service.status === 'down' ? 'Disrupted' : 'Syncing'}
                           </span>
@@ -308,7 +313,7 @@ export default function DashboardPage() {
                       </div>
 
                       <div className="hidden md:block text-right">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 leading-none px-1 text-slate-400 font-sans">Availability</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 leading-none px-1 font-sans">Availability</p>
                         <p className="text-xs font-bold text-slate-900 italic leading-none font-sans">
                           {service.uptime !== null ? `${service.uptime}%` : '---'}
                         </p>

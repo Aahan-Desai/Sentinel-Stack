@@ -5,6 +5,8 @@ import DashboardPage from "./features/dashboard/DashBoardPage";
 import ServiceDetailPage from "./features/services/ServiceDetailPage";
 import IncidentsPage from "./features/incidents/IncidentsPage";
 
+import TeamPage from "./features/team/TeamPage";
+
 function App() {
   const { isAuthenticated } = useAuth();
 
@@ -18,6 +20,7 @@ function App() {
         <Route path="/" element={<DashboardPage />} />
         <Route path="/services/:id" element={<ServiceDetailPage />} />
         <Route path="/incidents" element={<IncidentsPage />} />
+        <Route path="/team" element={<TeamPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
