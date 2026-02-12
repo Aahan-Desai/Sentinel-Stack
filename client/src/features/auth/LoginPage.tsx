@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "../../hooks/AuthContext";
-import { ShieldCheck, ArrowRight, Loader2, UserPlus, LogIn } from "lucide-react";
+import { ShieldCheck, ArrowRight, Loader2, UserPlus } from "lucide-react";
 import api from "../../lib/api";
 
 export default function LoginPage() {
