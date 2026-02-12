@@ -8,6 +8,14 @@ import {
   verifyRefreshToken,
 } from "../../shared/utils/jwt.js";
 
+const isProduction = process.env.NODE_ENV === "production";
+
+const cookieOptions = {
+  httpOnly: true,
+  sameSite: isProduction ? "none" : "strict",
+  secure: isProduction,
+};
+
 export const register = async (req, res) => {
   const { email, password, role } = req.body;
   const tenantSlug = req.headers["x-tenant-slug"];
@@ -49,11 +57,7 @@ export const register = async (req, res) => {
   const refreshToken = signRefreshToken(user);
 
   res
-    .cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      sameSite: "strict",
-      secure: false, // set true in production (HTTPS)
-    })
+    .cookie("refreshToken", refreshToken, cookieOptions)
     .status(201)
     .json({
       accessToken,
@@ -102,11 +106,7 @@ export const login = async (req, res) => {
   const refreshToken = signRefreshToken(user);
 
   res
-    .cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      sameSite: "strict",
-      secure: false, // set true in production (HTTPS)
-    })
+    .cookie("refreshToken", refreshToken, cookieOptions)
     .json({
       accessToken,
       user: {
