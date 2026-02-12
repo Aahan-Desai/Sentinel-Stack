@@ -17,7 +17,8 @@ import {
     LayoutDashboard,
     Activity,
     ShieldQuestion,
-    X
+    X,
+    Settings
 } from "lucide-react";
 
 export default function TeamPage() {
@@ -114,6 +115,10 @@ export default function TeamPage() {
                         <Link to="/team" className="px-3 py-2 bg-slate-100 text-indigo-600 rounded-lg flex items-center gap-2">
                             <Users className="w-4 h-4" />
                             Team
+                        </Link>
+                        <Link to="/settings" className="px-3 py-2 text-slate-500 hover:text-slate-900 transition-colors flex items-center gap-2">
+                            <Settings className="w-4 h-4" />
+                            Settings
                         </Link>
                     </div>
                 </div>

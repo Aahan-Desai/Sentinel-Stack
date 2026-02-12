@@ -16,6 +16,11 @@ const userSchema = new mongoose.Schema(
       trim: true
     },
 
+    displayName: {
+      type: String,
+      trim: true
+    },
+
     password: {
       type: String,
       required: true,
@@ -32,6 +37,11 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: ['active', 'disabled', 'pending'],
       default: 'active'
+    },
+
+    avatarUrl: {
+      type: String,
+      default: null
     }
   },
   { timestamps: true }

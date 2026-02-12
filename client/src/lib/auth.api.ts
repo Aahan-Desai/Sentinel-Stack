@@ -23,3 +23,8 @@ export async function login({
 
   return response.data;
 }
+
+export async function updateProfile(data: { displayName?: string; avatarUrl?: string | null }) {
+  const response = await api.put("/users/profile", data);
+  return response.data;
+}

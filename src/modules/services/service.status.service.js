@@ -17,7 +17,6 @@ export const getServiceStatus = async (serviceId) => {
 
   const checkIds = checks.map(c => c._id);
 
-  // last 24 hours
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
   const results = await CheckResult.find({
@@ -37,7 +36,6 @@ export const getServiceStatus = async (serviceId) => {
 
   const uptime = (upCount / total) * 100;
 
-  // Status is the latest result
   const latestStatus = results[0].status;
 
   return {

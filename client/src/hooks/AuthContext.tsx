@@ -2,8 +2,11 @@ import { createContext, useContext, useState } from "react";
 import * as authApi from "../lib/auth.api";
 
 type User = {
+  _id: string;
   email: string;
   role: string;
+  displayName?: string;
+  avatarUrl?: string | null;
 };
 
 type AuthContextType = {
@@ -11,6 +14,7 @@ type AuthContextType = {
   isAuthenticated: boolean;
   login: (email: string, password: string, tenantSlug: string) => Promise<void>;
   logout: () => void;
+  updateUser: (data: Partial<User>) => void;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -44,6 +48,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   }
 
+  function updateUser(data: Partial<User>) {
+    setUser(prev => prev ? { ...prev, ...data } : null);
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -51,6 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isAuthenticated: !!user,
         login,
         logout,
+        updateUser,
       }}
     >
       {children}

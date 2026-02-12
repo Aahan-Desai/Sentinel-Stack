@@ -15,7 +15,8 @@ import {
   ShieldCheck,
   Activity,
   RefreshCcw,
-  Users
+  Users,
+  User
 } from "lucide-react";
 
 export default function DashboardPage() {
@@ -108,6 +109,10 @@ export default function DashboardPage() {
               <Users className="w-4 h-4" />
               Team
             </Link>
+            <Link to="/settings" className="px-3 py-2 text-slate-500 hover:text-slate-900 transition-colors flex items-center gap-2">
+              <Settings className="w-4 h-4" />
+              Settings
+            </Link>
           </div>
         </div>
 
@@ -122,9 +127,16 @@ export default function DashboardPage() {
           <div className="w-px h-6 bg-slate-200 mx-1"></div>
           <div className="flex items-center gap-3 pl-2">
             <div className="text-right hidden sm:block">
-              <p className="text-sm font-semibold leading-none mb-1 text-slate-900">{user?.email.split('@')[0]}</p>
+              <p className="text-sm font-semibold leading-none mb-1 text-slate-900">{user?.displayName || user?.email.split('@')[0]}</p>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{user?.role}</p>
             </div>
+            <Link to="/settings" className="w-8 h-8 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center overflow-hidden hover:ring-2 hover:ring-indigo-500/20 transition-all">
+              {user?.avatarUrl ? (
+                <img src={user.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+              ) : (
+                <User className="w-4 h-4 text-indigo-600" />
+              )}
+            </Link>
             <button
               onClick={logout}
               className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg transition-all active:scale-95"
