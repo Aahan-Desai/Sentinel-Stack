@@ -1,25 +1,38 @@
 import { useState } from "react";
 import { useAuth } from "../../hooks/AuthContext";
-import { ShieldCheck, ArrowRight, Loader2 } from "lucide-react";
+import { ShieldCheck, ArrowRight, Loader2, UserPlus, LogIn } from "lucide-react";
+import api from "../../lib/api";
 
 export default function LoginPage() {
   const { login } = useAuth();
 
+  const [isRegister, setIsRegister] = useState(false);
   const [tenantSlug, setTenantSlug] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setSuccess(null);
 
     try {
-      await login(email, password, tenantSlug);
+      if (isRegister) {
+        await api.post("/auth/register",
+          { email, password, role: "admin" },
+          { headers: { "x-tenant-slug": tenantSlug } }
+        );
+        setSuccess("Account created successfully! You can now log in.");
+        setIsRegister(false);
+      } else {
+        await login(email, password, tenantSlug);
+      }
     } catch (err: any) {
-      setError(err.message || "Invalid credentials or tenant slug");
+      setError(err.response?.data?.message || err.message || "An error occurred");
     } finally {
       setLoading(false);
     }
@@ -27,7 +40,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex bg-white font-sans text-slate-900">
-      {/* LEFT SIDE - BRANDING (Visual Anchor) */}
+      {/* LEFT SIDE - BRANDING */}
       <div className="hidden lg:flex w-1/2 bg-slate-950 p-12 flex-col justify-between relative overflow-hidden">
         <div className="relative z-10">
           <div className="flex items-center gap-2 mb-12">
@@ -38,8 +51,8 @@ export default function LoginPage() {
           </div>
 
           <h1 className="text-5xl font-bold text-white leading-tight mb-6">
-            Enterprise-grade <br />
-            <span className="text-slate-500">Service Monitoring.</span>
+            {isRegister ? "Start your" : "Enterprise-grade"} <br />
+            <span className="text-slate-500">{isRegister ? "monitoring journey." : "Service Monitoring."}</span>
           </h1>
           <p className="text-slate-400 text-lg max-w-md">
             The infrastructure intelligence layer for modern engineering teams.
@@ -47,7 +60,6 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Decorative background element */}
         <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl opacity-50"></div>
         <div className="absolute top-1/2 -right-24 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl opacity-30"></div>
 
@@ -70,8 +82,14 @@ export default function LoginPage() {
           </div>
 
           <div className="mb-8">
-            <h2 className="text-3xl font-bold text-slate-900 mb-2">Welcome back</h2>
-            <p className="text-slate-500">Sign in to manage your organization's services</p>
+            <h2 className="text-3xl font-bold text-slate-900 mb-2">
+              {isRegister ? "Create account" : "Welcome back"}
+            </h2>
+            <p className="text-slate-500">
+              {isRegister
+                ? "Set up your workspace and start monitoring"
+                : "Sign in to manage your organization's services"}
+            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
@@ -125,6 +143,12 @@ export default function LoginPage() {
               </div>
             )}
 
+            {success && (
+              <div className="p-4 bg-green-50 text-green-600 text-sm font-medium rounded-xl border border-green-100">
+                {success}
+              </div>
+            )}
+
             <button
               type="submit"
               disabled={loading}
@@ -133,22 +157,43 @@ export default function LoginPage() {
               {loading ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>Signing in...</span>
+                  <span>{isRegister ? "Creating account..." : "Signing in..."}</span>
                 </>
               ) : (
                 <>
-                  <span>Continue to Dashboard</span>
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  <span>{isRegister ? "Sign Up" : "Continue to Dashboard"}</span>
+                  {isRegister ? <UserPlus className="w-5 h-5" /> : <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />}
                 </>
               )}
             </button>
           </form>
 
-          <p className="mt-8 text-center text-sm text-slate-500">
-            Don't have an account? <span className="text-indigo-600 font-semibold cursor-pointer hover:underline underline-offset-4">Contact your administrator</span>
-          </p>
+          <div className="mt-8 text-center text-sm text-slate-500">
+            {isRegister ? (
+              <>
+                Already have an account?{" "}
+                <button
+                  onClick={() => setIsRegister(false)}
+                  className="text-indigo-600 font-semibold hover:underline underline-offset-4"
+                >
+                  Log in
+                </button>
+              </>
+            ) : (
+              <>
+                Don't have an account?{" "}
+                <button
+                  onClick={() => setIsRegister(true)}
+                  className="text-indigo-600 font-semibold hover:underline underline-offset-4"
+                >
+                  Create one now
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </div>
   );
 }
+
