@@ -1,21 +1,15 @@
 import { useRef, useState } from "react";
-import { Link } from "react-router-dom";
 import { useAuth } from "../../hooks/AuthContext";
-import { updateProfile } from "../../lib/auth.api";
+import { updateProfile, changePassword, deleteAccount } from "../../lib/auth.api";
+import Navigation from "../../components/Navigation";
 import {
     User,
-    Settings,
     Bell,
     Lock,
     Globe,
     Mail,
     Save,
     ChevronRight,
-    ShieldCheck,
-    LayoutDashboard,
-    Activity,
-    Users,
-    LogOut,
     CreditCard,
     Trash2
 } from "lucide-react";
@@ -51,6 +45,34 @@ export default function SettingsPage() {
         }
     };
 
+    const handleUpdatePassword = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!currentPassword || !newPassword) return;
+        setIsSaving(true);
+        setSaveStatus('idle');
+        try {
+            await changePassword({ currentPassword, newPassword });
+            setSaveStatus('success');
+            setCurrentPassword("");
+            setNewPassword("");
+            setTimeout(() => setSaveStatus('idle'), 3000);
+        } catch (err) {
+            setSaveStatus('error');
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleTerminateAccount = async () => {
+        if (!window.confirm("CRITICAL: This will permanently delete your account and all associated data. This action cannot be undone. Proceed?")) return;
+        try {
+            await deleteAccount();
+            logout();
+        } catch (err) {
+            alert("Failed to terminate account. Please contact support.");
+        }
+    };
+
     const handleAvatarClick = () => {
         fileInputRef.current?.click();
     };
@@ -75,56 +97,7 @@ export default function SettingsPage() {
 
     return (
         <div className="min-h-screen bg-slate-50 font-sans text-slate-900 leading-normal">
-            {/* TOP NAVIGATION BAR */}
-            <nav className="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between sticky top-0 z-30">
-                <div className="flex items-center gap-8">
-                    <Link to="/" className="flex items-center gap-2 text-slate-900 hover:text-indigo-600 transition-colors">
-                        <div className="p-1.5 bg-indigo-600 rounded-lg text-white">
-                            <ShieldCheck className="w-5 h-5" />
-                        </div>
-                        <span className="font-bold tracking-tight text-lg">Sentinel</span>
-                    </Link>
-
-                    <div className="hidden md:flex items-center gap-1 text-sm font-medium">
-                        <Link to="/" className="px-3 py-2 text-slate-500 hover:text-slate-900 transition-colors flex items-center gap-2">
-                            <LayoutDashboard className="w-4 h-4" />
-                            Overview
-                        </Link>
-                        <Link to="/incidents" className="px-3 py-2 text-slate-500 hover:text-slate-900 transition-colors flex items-center gap-2">
-                            <Activity className="w-4 h-4" />
-                            Incidents
-                        </Link>
-                        <Link to="/team" className="px-3 py-2 text-slate-500 hover:text-slate-900 transition-colors flex items-center gap-2">
-                            <Users className="w-4 h-4" />
-                            Team
-                        </Link>
-                        <Link to="/settings" className="px-3 py-2 bg-slate-100 text-indigo-600 rounded-lg flex items-center gap-2">
-                            <Settings className="w-4 h-4" />
-                            Settings
-                        </Link>
-                    </div>
-                </div>
-
-                <div className="flex items-center gap-4">
-                    <button className="p-2 text-slate-400 hover:text-slate-900 transition-colors">
-                        <Bell className="w-5 h-5" />
-                    </button>
-                    <div className="w-px h-6 bg-slate-200 mx-1"></div>
-                    <div className="flex items-center gap-3 pl-2">
-                        <div className="text-right hidden sm:block">
-                            <p className="text-sm font-semibold leading-none mb-1 text-slate-900">{user?.email.split('@')[0]}</p>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{user?.role}</p>
-                        </div>
-                        <button
-                            onClick={logout}
-                            className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg transition-all active:scale-95"
-                            title="Sign Out"
-                        >
-                            <LogOut className="w-5 h-5" />
-                        </button>
-                    </div>
-                </div>
-            </nav>
+            <Navigation />
 
             <main className="max-w-[1200px] mx-auto p-8">
                 <div className="mb-10">
@@ -133,7 +106,6 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-                    {/* SIDEBAR TABS */}
                     <div className="lg:col-span-3 space-y-1">
                         {tabs.map((tab) => (
                             <button
@@ -150,7 +122,6 @@ export default function SettingsPage() {
                         ))}
                     </div>
 
-                    {/* CONTENT AREA */}
                     <div className="lg:col-span-9">
                         <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-8">
                             {activeTab === 'profile' && (
@@ -220,7 +191,7 @@ export default function SettingsPage() {
                                         </div>
 
                                         <div className="pt-4 flex items-center justify-between">
-                                            <p className="text-xs text-slate-400 font-medium italic">Last updated: Today at 4:12 PM</p>
+                                            <p className="text-xs text-slate-400 font-medium italic">Changes automatically synchronized with cloud</p>
                                             <button
                                                 type="submit"
                                                 disabled={isSaving}
@@ -237,7 +208,7 @@ export default function SettingsPage() {
                                 <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
                                     <div>
                                         <h3 className="font-bold text-lg text-slate-900 border-b border-slate-100 pb-4 mb-8">Access Control</h3>
-                                        <div className="space-y-6">
+                                        <form onSubmit={handleUpdatePassword} className="space-y-6">
                                             <div className="space-y-2">
                                                 <label className="text-[11px] font-bold uppercase tracking-widest text-slate-400 ml-1">Current Password</label>
                                                 <input
@@ -245,6 +216,7 @@ export default function SettingsPage() {
                                                     value={currentPassword}
                                                     onChange={(e) => setCurrentPassword(e.target.value)}
                                                     placeholder="••••••••"
+                                                    required
                                                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-sm"
                                                 />
                                             </div>
@@ -255,15 +227,20 @@ export default function SettingsPage() {
                                                     value={newPassword}
                                                     onChange={(e) => setNewPassword(e.target.value)}
                                                     placeholder="••••••••"
+                                                    required
                                                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-sm"
                                                 />
                                             </div>
                                             <div className="pt-2">
-                                                <button className="flex items-center gap-2 px-6 py-2.5 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition-all active:scale-[0.98]">
-                                                    Update Password
+                                                <button
+                                                    type="submit"
+                                                    disabled={isSaving}
+                                                    className="flex items-center gap-2 px-6 py-2.5 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition-all active:scale-[0.98] disabled:opacity-50"
+                                                >
+                                                    {isSaving ? "Updating..." : "Update Password"}
                                                 </button>
                                             </div>
-                                        </div>
+                                        </form>
                                     </div>
 
                                     <div className="pt-8 border-t border-slate-100">
@@ -271,7 +248,10 @@ export default function SettingsPage() {
                                             <Trash2 className="w-4 h-4" /> Danger Zone
                                         </h4>
                                         <p className="text-sm text-slate-500 mb-4">Once you delete your account, there is no going back. Please be certain.</p>
-                                        <button className="px-5 py-2 border border-red-200 text-red-600 rounded-xl hover:bg-red-50 text-xs font-bold transition-all">
+                                        <button
+                                            onClick={handleTerminateAccount}
+                                            className="px-5 py-2 border border-red-200 text-red-600 rounded-xl hover:bg-red-50 text-xs font-bold transition-all"
+                                        >
                                             Terminate Account
                                         </button>
                                     </div>
@@ -289,8 +269,9 @@ export default function SettingsPage() {
                                         <div className="space-y-2">
                                             <label className="text-[11px] font-bold uppercase tracking-widest text-slate-400 ml-1">Organization Name</label>
                                             <input
-                                                defaultValue="Sentinel HQ"
-                                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-sm font-semibold"
+                                                readOnly
+                                                value={user?.tenantName || "Sentinel HQ"}
+                                                className="w-full px-4 py-3 bg-slate-100 border border-slate-200 rounded-xl text-sm font-semibold text-slate-500 cursor-not-allowed"
                                             />
                                         </div>
                                         <div className="space-y-2">
@@ -298,8 +279,8 @@ export default function SettingsPage() {
                                             <div className="flex items-center gap-2">
                                                 <span className="text-xs font-bold text-slate-400">app.sentinel.io/</span>
                                                 <input
-                                                    disabled
-                                                    defaultValue="sentinel-hq"
+                                                    readOnly
+                                                    value={user?.tenantSlug || "sentinel-hq"}
                                                     className="flex-1 px-4 py-3 bg-slate-100 border border-slate-200 rounded-xl text-sm font-bold text-slate-500 cursor-not-allowed"
                                                 />
                                             </div>

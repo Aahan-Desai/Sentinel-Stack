@@ -1,14 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import Navigation from "../../components/Navigation";
 import {
-    AlertCircle,
     CheckCircle2,
     Clock,
-    ArrowLeft,
-    Filter,
     RefreshCcw,
     Activity,
-    ChevronRight
+    ChevronRight,
 } from "lucide-react";
 import api from "../../lib/api";
 
@@ -43,29 +41,7 @@ export default function IncidentsPage() {
 
     return (
         <div className="min-h-screen bg-slate-50 font-sans text-slate-900 leading-normal">
-            {/* HEADER */}
-            <nav className="h-16 bg-white border-b border-slate-200 px-8 flex items-center justify-between sticky top-0 z-30">
-                <div className="flex items-center gap-8">
-                    <Link to="/" className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 transition-all font-medium text-sm">
-                        <ArrowLeft className="w-4 h-4" />
-                        Back to Dashboard
-                    </Link>
-                    <div className="h-4 w-px bg-slate-200"></div>
-                    <h1 className="text-sm font-bold tracking-tight flex items-center gap-2">
-                        <AlertCircle className="w-4 h-4 text-slate-400" />
-                        Incident Log
-                    </h1>
-                </div>
-
-                <div className="flex items-center gap-3">
-                    <button className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 transition-colors">
-                        <Filter className="w-4 h-4" />
-                    </button>
-                    <button onClick={() => window.location.reload()} className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 transition-colors">
-                        <RefreshCcw className="w-4 h-4" />
-                    </button>
-                </div>
-            </nav>
+            <Navigation />
 
             <main className="max-w-4xl mx-auto py-12 px-8">
                 <div className="mb-12">

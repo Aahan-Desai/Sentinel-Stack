@@ -7,6 +7,8 @@ type User = {
   role: string;
   displayName?: string;
   avatarUrl?: string | null;
+  tenantName?: string;
+  tenantSlug?: string;
 };
 
 type AuthContextType = {
@@ -15,6 +17,7 @@ type AuthContextType = {
   login: (email: string, password: string, tenantSlug: string) => Promise<void>;
   logout: () => void;
   updateUser: (data: Partial<User>) => void;
+  refreshUser: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -60,6 +63,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         logout,
         updateUser,
+        refreshUser: async () => {
+          try {
+            const data = await authApi.getMe();
+            setUser(data);
+          } catch (err) {
+            console.error("Failed to refresh user", err);
+          }
+        }
       }}
     >
       {children}

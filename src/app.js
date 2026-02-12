@@ -25,61 +25,17 @@ app.use(
   })
 );
 
-/**
- * Body + cookies — once only
- */
 app.use(express.json());
 app.use(cookieParser());
 
-/**
- * Public routes (NO tenant required)
- */
 app.use("/auth", authRoutes);
 
-/**
- * Tenant resolution (everything below requires tenant)
- */
 app.use(tenantMiddleware);
 
-/**
- * Protected routes
- */
 app.use("/users", userRoutes);
 app.use("/services", serviceRoutes);
 app.use("/incidents", incidentRoutes);
 
-/**
- * Health checks
- */
-app.get("/health", (req, res) => {
-  res.json({
-    status: "ok",
-    tenant: req.tenant,
-  });
-});
-
-app.get("/protected-health", authMiddleware, (req, res) => {
-  res.json({
-    status: "ok",
-    user: req.user,
-  });
-});
-
-app.get(
-  "/admin/health",
-  authMiddleware,
-  requireRole("admin"),
-  (req, res) => {
-    res.json({
-      status: "admin ok",
-      user: req.user,
-    });
-  }
-);
-
-/**
- * Global error handler — LAST
- */
 app.use(errorHandler);
 
 export default app;

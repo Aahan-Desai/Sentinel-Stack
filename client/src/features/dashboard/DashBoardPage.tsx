@@ -3,24 +3,19 @@ import { Link } from "react-router-dom";
 import { fetchServices, createService, fetchGlobalStats } from "../../lib/services.api";
 import { useAuth } from "../../hooks/AuthContext";
 import type { Service } from "../../types/service";
+import Navigation from "../../components/Navigation";
 import {
   Plus,
-  LogOut,
-  LayoutDashboard,
   Globe,
   ChevronRight,
   Search,
-  Bell,
   Settings,
-  ShieldCheck,
-  Activity,
   RefreshCcw,
-  Users,
-  User
+  Bell
 } from "lucide-react";
 
 export default function DashboardPage() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
 
   const [services, setServices] = useState<Service[]>([]);
   const [globalStats, setGlobalStats] = useState({ globalUptime: 0, avgLatency: 0 });
@@ -86,70 +81,9 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 leading-normal">
-      {/* TOP NAVIGATION BAR */}
-      <nav className="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between sticky top-0 z-30">
-        <div className="flex items-center gap-8">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="p-1.5 bg-indigo-600 rounded-lg text-white">
-              <ShieldCheck className="w-5 h-5" />
-            </div>
-            <span className="font-bold tracking-tight text-lg text-slate-900">Sentinel</span>
-          </Link>
-
-          <div className="hidden md:flex items-center gap-1 text-sm font-medium">
-            <Link to="/" className="px-3 py-2 bg-slate-100 text-indigo-600 rounded-lg flex items-center gap-2">
-              <LayoutDashboard className="w-4 h-4" />
-              Overview
-            </Link>
-            <Link to="/incidents" className="px-3 py-2 text-slate-500 hover:text-slate-900 transition-colors flex items-center gap-2">
-              <Activity className="w-4 h-4" />
-              Incidents
-            </Link>
-            <Link to="/team" className="px-3 py-2 text-slate-500 hover:text-slate-900 transition-colors flex items-center gap-2">
-              <Users className="w-4 h-4" />
-              Team
-            </Link>
-            <Link to="/settings" className="px-3 py-2 text-slate-500 hover:text-slate-900 transition-colors flex items-center gap-2">
-              <Settings className="w-4 h-4" />
-              Settings
-            </Link>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-4">
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-full text-[10px] font-bold uppercase tracking-wider text-slate-500 border border-slate-200">
-            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-            System Operational
-          </div>
-          <button className="p-2 text-slate-400 hover:text-slate-900 transition-colors">
-            <Bell className="w-5 h-5" />
-          </button>
-          <div className="w-px h-6 bg-slate-200 mx-1"></div>
-          <div className="flex items-center gap-3 pl-2">
-            <div className="text-right hidden sm:block">
-              <p className="text-sm font-semibold leading-none mb-1 text-slate-900">{user?.displayName || user?.email.split('@')[0]}</p>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{user?.role}</p>
-            </div>
-            <Link to="/settings" className="w-8 h-8 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center overflow-hidden hover:ring-2 hover:ring-indigo-500/20 transition-all">
-              {user?.avatarUrl ? (
-                <img src={user.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-              ) : (
-                <User className="w-4 h-4 text-indigo-600" />
-              )}
-            </Link>
-            <button
-              onClick={logout}
-              className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg transition-all active:scale-95"
-              title="Sign Out"
-            >
-              <LogOut className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
-      </nav>
+      <Navigation services={services} />
 
       <main className="max-w-[1400px] mx-auto p-8">
-        {/* DASHBOARD HEADER */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
           <div>
             <h1 className="text-3xl font-bold tracking-tight mb-2 text-slate-900">Service Overview</h1>
@@ -170,9 +104,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
-          {/* LEFT: FORM AND STATS */}
           <div className="xl:col-span-4 space-y-8">
-            {/* ADMIN FORM */}
             {user?.role === "admin" && (
               <section className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 relative overflow-hidden">
                 <div className="relative z-10">
@@ -223,7 +155,6 @@ export default function DashboardPage() {
               </section>
             )}
 
-            {/* QUICK STATS CARD */}
             <div className="bg-slate-950 p-6 rounded-2xl text-white shadow-xl">
               <div className="flex items-center justify-between mb-8">
                 <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Workspace Metrics</h4>
@@ -257,7 +188,6 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* RIGHT: LIST */}
           <div className="xl:col-span-8 space-y-6">
             <div className="flex items-center justify-between mb-2">
               <h3 className="font-bold text-slate-500 text-xs uppercase tracking-widest leading-none">Active Watchlist</h3>
@@ -341,7 +271,7 @@ export default function DashboardPage() {
             )}
           </div>
         </div>
-      </main>
-    </div>
+      </main >
+    </div >
   );
 }

@@ -8,17 +8,11 @@ export interface TeamMember {
     createdAt: string;
 }
 
-/**
- * Fetch all team members for the current tenant
- */
 export async function fetchTeamMembers(): Promise<TeamMember[]> {
     const res = await api.get("/users");
     return res.data.users || [];
 }
 
-/**
- * Invite a new member (admin only)
- */
 export async function inviteMember(payload: {
     email: string;
     role: string;

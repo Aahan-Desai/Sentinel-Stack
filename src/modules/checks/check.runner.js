@@ -37,23 +37,22 @@ const executeCheck = async (check) => {
             error: errorMsg,
         });
 
-        // INCIDENT LOGIC
         try {
             if (status === 'up') {
-               
+
                 await Incident.updateMany(
                     { serviceId: check.serviceId, status: 'active' },
                     { status: 'resolved', resolvedAt: new Date() }
                 );
             } else {
-                
+
                 const existingIncident = await Incident.findOne({
                     serviceId: check.serviceId,
                     status: 'active'
                 });
 
                 if (!existingIncident) {
-                   
+
                     const service = await Service.findById(check.serviceId);
                     if (service) {
                         await Incident.create({
@@ -80,7 +79,6 @@ const executeCheck = async (check) => {
 export const startCheckRunner = () => {
     console.log('🚀 Health Check Runner initialized');
 
-    // Run every 60 seconds
     setInterval(async () => {
         try {
             const activeChecks = await Check.find({ isActive: true });
@@ -89,7 +87,6 @@ export const startCheckRunner = () => {
 
             console.log(`📡 Running health checks for ${activeChecks.length} services...`);
 
-            // Run checks in parallel
             await Promise.all(activeChecks.map(check => executeCheck(check)));
 
         } catch (error) {

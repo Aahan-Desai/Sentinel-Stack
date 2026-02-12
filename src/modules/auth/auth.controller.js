@@ -8,9 +8,6 @@ import {
   verifyRefreshToken,
 } from "../../shared/utils/jwt.js";
 
-/**
- * REGISTER
- */
 export const register = async (req, res) => {
   const { email, password, role } = req.body;
   const tenantSlug = req.headers["x-tenant-slug"];
@@ -65,13 +62,12 @@ export const register = async (req, res) => {
         email: user.email,
         role: user.role,
         tenantId: tenant._id,
+        tenantName: tenant.name,
+        tenantSlug: tenant.slug
       },
     });
 };
 
-/**
- * LOGIN
- */
 export const login = async (req, res) => {
   const { email, password } = req.body;
   const tenantSlug = req.headers["x-tenant-slug"];
@@ -118,13 +114,12 @@ export const login = async (req, res) => {
         email: user.email,
         role: user.role,
         tenantId: user.tenantId,
+        tenantName: tenant.name,
+        tenantSlug: tenant.slug
       },
     });
 };
 
-/**
- * REFRESH TOKEN
- */
 export const refreshToken = async (req, res) => {
   const token = req.cookies.refreshToken;
 
@@ -145,11 +140,23 @@ export const refreshToken = async (req, res) => {
   res.json({ accessToken: newAccessToken });
 };
 
-/**
- * LOGOUT
- */
 export const logout = async (req, res) => {
   res.clearCookie("refreshToken").json({
     message: "Logged out successfully",
+  });
+};
+
+export const getMe = async (req, res) => {
+  const user = await User.findById(req.user.userId).select("-password");
+  const tenant = await Tenant.findById(req.user.tenantId);
+
+  if (!user || !tenant) {
+    throw new ApiError(404, "User or Tenant not found");
+  }
+
+  res.json({
+    ...user.toObject(),
+    tenantName: tenant.name,
+    tenantSlug: tenant.slug
   });
 };

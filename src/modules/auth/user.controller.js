@@ -1,4 +1,5 @@
 import { User } from './user.model.js';
+import bcrypt from 'bcryptjs';
 
 export const listUsers = async (req, res) => {
   try {
@@ -32,15 +33,11 @@ export const inviteUser = async (req, res) => {
       return res.status(409).json({ message: 'User already in team' });
     }
 
-    // Create user in pending status
-    // Note: In a real app, we'd send an email here with a join link
     const user = await User.create({
       tenantId,
       email,
       role,
       status: 'pending',
-      // Provide a dummy password for now since it's required in the model
-      // In a real app, we'd make password optional or handle it via Invitation model
       password: 'PENDING_INVITATION'
     });
 
@@ -73,5 +70,45 @@ export const updateUser = async (req, res) => {
     res.json(user);
   } catch (error) {
     res.status(500).json({ message: error.message || 'Failed to update profile' });
+  }
+};
+
+export const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user._id;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: 'Current and new password are required' });
+    }
+
+    const user = await User.findById(userId).select('+password');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Invalid current password' });
+    }
+
+    user.password = await bcrypt.hash(newPassword, 12);
+    await user.save();
+
+    res.json({ message: 'Password updated successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message || 'Failed to update password' });
+  }
+};
+
+export const deleteAccount = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    await User.findByIdAndDelete(userId);
+
+    res.json({ message: 'Account terminated successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message || 'Failed to terminate account' });
   }
 };

@@ -4,7 +4,8 @@ import {
   register,
   login,
   refreshToken,
-  logout
+  logout,
+  getMe
 } from './auth.controller.js';
 
 import { authMiddleware } from '../../shared/middleware/auth.middleware.js';
@@ -49,6 +50,15 @@ router.post(
   '/logout',
   authMiddleware,
   logout
+);
+
+/**
+ * GET ME
+ */
+router.get(
+  '/me',
+  authMiddleware,
+  getMe
 );
 
 export default router;

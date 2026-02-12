@@ -1,5 +1,5 @@
 import express from 'express';
-import { listUsers, inviteUser, updateUser } from './user.controller.js';
+import { listUsers, inviteUser, updateUser, changePassword, deleteAccount } from './user.controller.js';
 import { authMiddleware } from '../../shared/middleware/auth.middleware.js';
 import { requireRole } from '../../shared/middleware/rbac.middleware.js';
 
@@ -23,6 +23,18 @@ router.put(
   '/profile',
   authMiddleware,
   updateUser
+);
+
+router.post(
+  '/change-password',
+  authMiddleware,
+  changePassword
+);
+
+router.delete(
+  '/account',
+  authMiddleware,
+  deleteAccount
 );
 
 export default router;
