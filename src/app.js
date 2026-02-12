@@ -1,6 +1,7 @@
 import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import { env } from "./config/env.js";
 
 import { tenantMiddleware } from "./shared/middleware/tenant.middleware.js";
 import { authMiddleware } from "./shared/middleware/auth.middleware.js";
@@ -20,7 +21,7 @@ const app = express();
  */
 app.use(
   cors({
-    origin: /http:\/\/localhost:\d+$/,
+    origin: [env.CLIENT_URL, /http:\/\/localhost:\d+$/],
     credentials: true,
   })
 );
