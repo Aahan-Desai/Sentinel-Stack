@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "../../hooks/AuthContext";
-import { ShieldCheck, ArrowRight, Loader2, UserPlus } from "lucide-react";
+import { ShieldCheck, ArrowRight, Loader2, UserPlus, Eye } from "lucide-react";
 import api from "../../lib/api";
 
 export default function LoginPage() {
@@ -33,6 +33,19 @@ export default function LoginPage() {
       }
     } catch (err: any) {
       setError(err.response?.data?.message || err.message || "An error occurred");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleDemoLogin() {
+    setLoading(true);
+    setError(null);
+    try {
+      // These should match the credentials you create in your production DB
+      await login("guest@sentinel.io", "demo1234", "demo-workspace");
+    } catch (err: any) {
+      setError("Demo workspace is currently offline. Please try manual login.");
     } finally {
       setLoading(false);
     }
@@ -166,6 +179,18 @@ export default function LoginPage() {
                 </>
               )}
             </button>
+
+            {!isRegister && (
+              <button
+                type="button"
+                onClick={handleDemoLogin}
+                disabled={loading}
+                className="w-full bg-white border border-slate-200 text-slate-600 font-bold py-3.5 rounded-xl hover:bg-slate-50 transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
+              >
+                <Eye className="w-5 h-5" />
+                <span>View Live Demo</span>
+              </button>
+            )}
           </form>
 
           <div className="mt-8 text-center text-sm text-slate-500">
