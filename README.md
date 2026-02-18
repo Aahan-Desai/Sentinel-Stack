@@ -12,11 +12,11 @@ Modern applications depend on multiple internal and external services (APIs, web
 When a service goes down, teams often find out **after users complain**.
 
 Sentinel Stack allows organizations to:
-- define services they depend on
-- configure automated health checks
-- continuously monitor uptime in the background
-- derive service health and availability metrics
-- enforce strict tenant and role-based isolation
+- Define services they depend on
+- Configure automated health checks
+- Continuously monitor uptime in the background
+- Derive service health and availability metrics
+- Enforce strict tenant and role-based isolation
 
 ---
 
@@ -24,11 +24,11 @@ Sentinel Stack allows organizations to:
 
 Sentinel Stack is designed as a **production-style SaaS backend**, focusing on:
 
-- Multi-tenant architecture
-- Secure authentication & authorization
-- Background processing
-- Time-based health monitoring
-- Clean modular backend design
+- **Multi-tenant architecture**: Physical data isolation between organizations.
+- **Secure authentication & authorization**: JWT-based auth with Role-Based Access Control.
+- **Background processing**: Independent worker handles monitoring logic without blocking the API.
+- **Time-based health monitoring**: Tracking uptime percentages and latency over time.
+- **Clean modular backend design**: Clear separation of concerns between routes, controllers, and services.
 
 ---
 
@@ -41,7 +41,7 @@ Responsible for:
 - Authentication & authorization
 - Tenant isolation
 - Managing services and checks
-- Exposing REST APIs
+- Exposing REST APIs for the frontend
 
 ### 2️⃣ Worker Process
 Responsible for:
@@ -56,85 +56,69 @@ Responsible for:
 
 ## 🧩 Domain Model
 
-Tenant
-└── User
-└── Service
-└── Check
-└── CheckResult
-
-
-### Explanation
-- **Tenant**: An organization using Sentinel Stack
-- **User**: Member or admin belonging to a tenant
-- **Service**: A system being monitored (e.g. API, website)
-- **Check**: Configuration defining how and when to monitor a service
-- **CheckResult**: Time-series record of each health check execution
+- **Tenant**: An organization (workspace) using Sentinel Stack.
+- **User**: Member or admin belonging to a tenant.
+- **Service**: A system being monitored (e.g. API, website).
+- **Check**: Configuration defining how and when to monitor a service.
+- **CheckResult**: Time-series record of each health check execution.
 
 ---
 
 ## 🔐 Authentication & Security
 
-- JWT-based authentication
-- Refresh tokens stored in httpOnly cookies
-- Role-Based Access Control (Admin / Member)
-- Tenant-level data isolation
-- Rate-limited authentication endpoints
-- Passwords stored as secure hashes
+- JWT-based authentication with Access and Refresh tokens.
+- Refresh tokens stored in `httpOnly` cookies for security.
+- Role-Based Access Control (Admin / Member).
+- Tenant-level data isolation (Middleware-driven).
+- Passwords stored as secure bcrypt hashes.
 
 ---
 
 ## 📡 Monitoring Logic
 
-- Health checks are configured via APIs
-- Background worker periodically executes checks
-- Each execution records:
-  - status (up/down)
-  - response time
-- Uptime percentage and service status are **derived dynamically** from historical data
+- Health checks are configured via APIs.
+- Background worker periodically executes checks using Axios.
+- Each execution records status (up/down) and response time.
+- Uptime percentage and service status are **derived dynamically** from historical data samples.
 
 ---
 
 ## 📄 API Overview
 
 ### Authentication
-- `POST /auth/register`
-- `POST /auth/login`
-- `POST /auth/refresh`
-- `POST /auth/logout`
+- `POST /auth/register` - Create a new tenant and admin user
+- `POST /auth/login` - Authenticate and receive tokens
+- `POST /auth/refresh` - Swap refresh token for a new access token
+- `POST /auth/logout` - Clear session and cookies
 
 ### Services
-- `POST /services` (admin only)
-- `GET /services` (paginated)
-- `GET /services/:id/status`
+- `POST /services` - Create a new service (Admin only)
+- `GET /services` - List all services for the tenant (Paginated)
+- `GET /services/:id/status` - Get live status and uptime metrics
 
 ### Checks
-- `POST /services/:id/checks` (admin only)
-- `GET /services/:id/checks` (paginated)
-
-All routes enforce authentication, authorization, and tenant isolation.
+- `POST /services/:id/checks` - Configure monitor frequency (Admin only)
+- `GET /services/:id/checks` - List monitor configurations
 
 ---
 
 ## ⚙️ Tech Stack
 
-- Node.js
-- Express.js
-- MongoDB + Mongoose
-- JWT Authentication
-- bcrypt
-- Background workers
-- Axios (for HTTP checks)
+- **Backend**: Node.js, Express.js
+- **Database**: MongoDB + Mongoose
+- **Security**: JWT, bcrypt
+- **Monitoring**: Background workers, Axios
+- **Frontend**: React, TypeScript, Tailwind CSS, Lucide Icons
 
 ---
 
 ## 🧪 Engineering Highlights
 
-- Clean layered architecture (routes → controllers → services → models)
-- Centralized error handling
-- Pagination for scalable APIs
-- Secure defaults (hidden password fields, explicit selection)
-- Environment-based configuration
-- Git-safe secrets management
+- **Clean Layered Architecture**: Logic flows predictably (routes → controllers → services → models).
+- **Centralized Error Handling**: Standardized API responses and error mapping.
+- **Pagination**: Built-in support for scalable APIs.
+- **Environment-based Configuration**: Securely managed secrets and endpoints.
+- **Case-Insensitive Slugs**: Robust tenant resolution logic.
 
 ---
 
@@ -146,130 +130,47 @@ All routes enforce authentication, authorization, and tenant isolation.
 
 ### Setup
 
-1. Install dependencies
+1. **Install dependencies**
+   ```bash
+   # Root
+   npm install
+   # Client
+   cd client && npm install
+   ```
 
-### Explanation
-- **Tenant**: An organization using Sentinel Stack
-- **User**: Member or admin belonging to a tenant
-- **Service**: A system being monitored (e.g. API, website)
-- **Check**: Configuration defining how and when to monitor a service
-- **CheckResult**: Time-series record of each health check execution
+2. **Create a `.env` file in the root**
+   ```env
+   PORT=5111
+   MONGO_URI=mongodb://localhost:27017/sentinelstack
+   JWT_ACCESS_SECRET=your_access_secret
+   JWT_REFRESH_SECRET=your_refresh_secret
+   CLIENT_URL=http://localhost:5173
+   ```
 
----
-
-## 🔐 Authentication & Security
-
-- JWT-based authentication
-- Refresh tokens stored in httpOnly cookies
-- Role-Based Access Control (Admin / Member)
-- Tenant-level data isolation
-- Rate-limited authentication endpoints
-- Passwords stored as secure hashes
-
----
-
-## 📡 Monitoring Logic
-
-- Health checks are configured via APIs
-- Background worker periodically executes checks
-- Each execution records:
-  - status (up/down)
-  - response time
-- Uptime percentage and service status are **derived dynamically** from historical data
-
----
-
-## 📄 API Overview
-
-### Authentication
-- `POST /auth/register`
-- `POST /auth/login`
-- `POST /auth/refresh`
-- `POST /auth/logout`
-
-### Services
-- `POST /services` (admin only)
-- `GET /services` (paginated)
-- `GET /services/:id/status`
-
-### Checks
-- `POST /services/:id/checks` (admin only)
-- `GET /services/:id/checks` (paginated)
-
-All routes enforce authentication, authorization, and tenant isolation.
-
----
-
-## ⚙️ Tech Stack
-
-- Node.js
-- Express.js
-- MongoDB + Mongoose
-- JWT Authentication
-- bcrypt
-- Background workers
-- Axios (for HTTP checks)
-
----
-
-## 🧪 Engineering Highlights
-
-- Clean layered architecture (routes → controllers → services → models)
-- Centralized error handling
-- Pagination for scalable APIs
-- Secure defaults (hidden password fields, explicit selection)
-- Environment-based configuration
-- Git-safe secrets management
-
----
-
-## ▶️ Running Locally
-
-### Prerequisites
-- Node.js
-- MongoDB
-
-### Setup
-
-1. Install dependencies
-npm install
-
-
-2. Create a `.env` file
-PORT=5111
-MONGO_URI=mongodb://localhost:27017/sentinelstack
-JWT_ACCESS_SECRET=your_access_secret
-JWT_REFRESH_SECRET=your_refresh_secret file
-
-
-3. Start API server
-npm run dev
-
-4. Start worker process
-node src/workers/worker.js
-
+3. **Start the system**
+   ```bash
+   # Start API server (Root)
+   npm run dev
+   
+   # Start Worker process (Root)
+   node src/workers/worker.js
+   
+   # Start Frontend (Client folder)
+   npm run dev
+   ```
 
 ---
 
 ## 🔮 Future Improvements
 
-- WebSocket-based real-time updates
-- Redis-backed job queues
-- Docker + Nginx deployment
-- Public status dashboards
-- Metrics aggregation & caching
+- WebSocket-based real-time dashboard updates
+- Redis-backed job queues for check scheduling
+- Public status page for organizations
+- Integration with Slack/Discord for outage alerts
+- Multi-region monitoring probes
 
 ---
 
 ## 🎯 Why This Project Matters
 
-Sentinel Stack focuses on **how real backend systems are designed**, not just on features.
-
-It demonstrates:
-- backend architecture thinking
-- multi-tenant SaaS patterns
-- background processing
-- security-conscious development
-
-This project is intended as a **portfolio-quality backend system**, suitable for technical interviews and real-world discussion.
-
+Sentinel Stack focuses on **how real backend systems are designed**, not just on features. It demonstrates proficiency in multi-tenant SaaS patterns, background processing, and security-conscious development. This project is intended as a **portfolio-quality backend system**, suitable for technical interviews and deep architectural discussions.
