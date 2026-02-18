@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "../../hooks/AuthContext";
-import { ShieldCheck, ArrowRight, Loader2, UserPlus, Eye, Activity } from "lucide-react";
+import { ShieldCheck, ArrowRight, Loader2, UserPlus, Eye } from "lucide-react";
 import api from "../../lib/api";
 
 export default function LoginPage() {
@@ -50,219 +50,173 @@ export default function LoginPage() {
     }
   }
 
-  const scrollToAuth = () => {
-    document.getElementById('auth-section')?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   return (
-    <div className="min-h-screen bg-white font-sans text-slate-900">
-      {/* 1. NAVBAR */}
-      <nav className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-slate-100 flex justify-center">
-        <div className="max-w-7xl w-full px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="p-1.5 bg-blue-600 rounded-lg shadow-lg shadow-blue-500/20">
-              <ShieldCheck className="w-5 h-5 text-white" />
+    <div className="min-h-screen flex bg-white font-sans text-slate-900">
+      {/* LEFT SIDE - BRANDING */}
+      <div className="hidden lg:flex w-1/2 bg-slate-950 p-12 flex-col justify-between relative overflow-hidden">
+        <div className="relative z-10">
+          <div className="flex items-center gap-2 mb-12">
+            <div className="p-2 bg-indigo-500 rounded-lg">
+              <ShieldCheck className="w-6 h-6 text-white" />
             </div>
-            <span className="text-lg font-bold tracking-tight text-slate-900">Sentinel Stack</span>
+            <span className="text-xl font-bold tracking-tight text-white">Sentinel Stack</span>
           </div>
 
-          <div className="hidden md:flex items-center gap-8">
-            <a href="#" className="text-sm font-medium text-slate-500 hover:text-blue-600 transition-colors">Features</a>
-            <a href="#" className="text-sm font-medium text-slate-500 hover:text-blue-600 transition-colors">Pricing</a>
-            <a href="#" className="text-sm font-medium text-slate-500 hover:text-blue-600 transition-colors">Docs</a>
-            <button onClick={scrollToAuth} className="text-sm font-medium text-slate-500 hover:text-blue-600 transition-colors">Dashboard</button>
-          </div>
-
-          <button
-            onClick={scrollToAuth}
-            className="px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded-full hover:bg-blue-700 transition-all shadow-md active:scale-95"
-          >
-            Start Monitoring
-          </button>
-        </div>
-      </nav>
-
-      {/* 2. HERO SECTION */}
-      <section className="relative pt-24 pb-20 px-6 overflow-hidden bg-gradient-to-b from-white to-blue-50/50">
-        <div className="max-w-7xl mx-auto flex flex-col items-center text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 mb-8 animate-in fade-in slide-in-from-bottom-4">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-            </span>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-blue-600">v2.0 is now live</span>
-          </div>
-
-          <h1 className="text-6xl md:text-7xl font-extrabold tracking-tight text-slate-900 mb-6 max-w-4xl leading-[1.1]">
-            Monitor Your Infrastructure <br />
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 italic">with Confidence.</span>
+          <h1 className="text-5xl font-bold text-white leading-tight mb-6">
+            {isRegister ? "Start your" : "Enterprise-grade"} <br />
+            <span className="text-slate-500">{isRegister ? "monitoring journey." : "Service Monitoring."}</span>
           </h1>
-
-          <p className="text-xl text-slate-500 max-w-2xl mb-10 leading-relaxed">
-            Real-time uptime monitoring, instant alerts, and multi-tenant reliability — built for modern engineering teams who value precision over guesswork.
+          <p className="text-slate-400 text-lg max-w-md">
+            The infrastructure intelligence layer for modern engineering teams.
+            Real-time status checks, multi-tenant isolation, and incident reporting.
           </p>
-
-          <div className="flex flex-col sm:flex-row items-center gap-4">
-            <button
-              onClick={scrollToAuth}
-              className="px-8 py-4 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 transition-all shadow-xl shadow-blue-500/20 active:scale-95 flex items-center gap-2"
-            >
-              Start Free Trial <ArrowRight className="w-5 h-5" />
-            </button>
-            <button
-              onClick={handleDemoLogin}
-              className="px-8 py-4 bg-white border border-slate-200 text-slate-600 font-bold rounded-2xl hover:bg-slate-50 transition-all active:scale-95 flex items-center gap-2"
-            >
-              <Eye className="w-5 h-5" /> View Demo
-            </button>
-          </div>
-
-          {/* BACKGROUND DECORATION */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-blue-400/5 rounded-full blur-[120px] pointer-events-none -z-10"></div>
         </div>
-      </section>
 
-      {/* 3. AUTH SECTION */}
-      <section id="auth-section" className="py-24 px-6 flex justify-center bg-white">
-        <div className="w-full max-w-[1000px] grid lg:grid-cols-2 gap-16 items-start">
+        <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl opacity-50"></div>
+        <div className="absolute top-1/2 -right-24 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl opacity-30"></div>
 
-          <div className="lg:max-w-md">
-            <h2 className="text-4xl font-bold mb-6 tracking-tight">Enterprise-grade <br /> Service Monitoring.</h2>
-            <div className="space-y-6">
-              <div className="flex gap-4">
-                <div className="p-2 bg-blue-50 text-blue-600 rounded-lg h-fit"><ShieldCheck className="w-6 h-6" /></div>
-                <div>
-                  <h4 className="font-bold mb-1">Tenant Isolation</h4>
-                  <p className="text-sm text-slate-500">Every organization gets its own dedicated, securely isolated workspace environment.</p>
-                </div>
-              </div>
-              <div className="flex gap-4">
-                <div className="p-2 bg-blue-50 text-blue-600 rounded-lg h-fit"><Activity className="w-6 h-6" /></div>
-                <div>
-                  <h4 className="font-bold mb-1">Real-time Telemetry</h4>
-                  <p className="text-sm text-slate-500">Distributed background workers probe your endpoints and calculate uptime with precision.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="w-full max-w-md bg-white p-8 rounded-3xl border border-slate-100 shadow-2xl shadow-slate-200/50">
-            <div className="mb-8">
-              <h3 className="text-2xl font-bold text-slate-900 mb-2">
-                {isRegister ? "Create account" : "Welcome back"}
-              </h3>
-              <p className="text-sm text-slate-500 font-medium">
-                {isRegister
-                  ? "Set up your workspace and start monitoring"
-                  : "Sign in to manage your infrastructure"}
-              </p>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-2 ml-1">Organization Slug</label>
-                <input
-                  placeholder="e.g. acme-corp"
-                  value={tenantSlug}
-                  onChange={(e) => setTenantSlug(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white focus:border-blue-500 transition-all outline-none text-sm font-medium"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-2 ml-1">Email Address</label>
-                <input
-                  type="email"
-                  placeholder="name@company.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white focus:border-blue-500 transition-all outline-none text-sm font-medium"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-2 ml-1">Password</label>
-                <input
-                  type="password"
-                  placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white focus:border-blue-500 transition-all outline-none text-sm font-medium"
-                  required
-                />
-              </div>
-
-              {error && (
-                <div className="p-3 bg-red-50 text-red-600 text-xs font-bold rounded-xl border border-red-100 italic">
-                  {error}
-                </div>
-              )}
-
-              {success && (
-                <div className="p-3 bg-green-50 text-green-600 text-xs font-bold rounded-xl border border-green-100">
-                  {success}
-                </div>
-              )}
-
-              <div className="pt-2 gap-3 flex flex-col">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-slate-900 text-white font-bold py-4 rounded-xl hover:bg-slate-800 transition-all disabled:opacity-70 flex items-center justify-center gap-2 active:scale-95 shadow-lg shadow-slate-200"
-                >
-                  {loading ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <>
-                      <span>{isRegister ? "Sign Up" : "Sign In to Dashboard"}</span>
-                      {isRegister ? <UserPlus className="w-5 h-5" /> : <ArrowRight className="w-5 h-5" />}
-                    </>
-                  )}
-                </button>
-
-                {!isRegister && (
-                  <button
-                    type="button"
-                    onClick={handleDemoLogin}
-                    className="w-full bg-white border border-slate-200 text-slate-600 font-bold py-4 rounded-xl hover:bg-slate-50 transition-all active:scale-95 flex items-center justify-center gap-2"
-                  >
-                    <Eye className="w-5 h-5" />
-                    Launch Guest Demo
-                  </button>
-                )}
-              </div>
-            </form>
-
-            <div className="mt-8 text-center">
-              <button
-                onClick={() => setIsRegister(!isRegister)}
-                className="text-xs font-bold text-blue-600 uppercase tracking-widest hover:underline decoration-2 underline-offset-4"
-              >
-                {isRegister ? "Use existing account" : "Create new workspace"}
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* FOOTER */}
-      <footer className="py-12 border-t border-slate-100 flex justify-center bg-slate-50/50">
-        <div className="max-w-7xl w-full px-6 flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex items-center gap-2 text-slate-400 font-medium text-sm">
+        <div className="relative z-10">
+          <div className="h-px bg-slate-800 w-full mb-6"></div>
+          <div className="flex items-center gap-4 text-slate-500 text-sm">
             <span>&copy; 2026 Sentinel Stack</span>
             <span>&bull;</span>
-            <span>Enterprise Infrastructure</span>
-          </div>
-          <div className="flex gap-8">
-            <a href="#" className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-blue-600 transition-colors">Privacy</a>
-            <a href="#" className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-blue-600 transition-colors">Terms</a>
-            <a href="#" className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-blue-600 transition-colors">Twitter</a>
+            <span>Security First Infrastructure</span>
           </div>
         </div>
-      </footer>
+      </div>
+
+      {/* RIGHT SIDE - FORM */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-slate-50 lg:bg-white">
+        <div className="w-full max-w-md">
+          <div className="lg:hidden flex items-center gap-2 mb-8">
+            <ShieldCheck className="w-8 h-8 text-indigo-600" />
+            <span className="text-2xl font-bold tracking-tight">Sentinel</span>
+          </div>
+
+          <div className="mb-8">
+            <h2 className="text-3xl font-bold text-slate-900 mb-2">
+              {isRegister ? "Create account" : "Welcome back"}
+            </h2>
+            <p className="text-slate-500">
+              {isRegister
+                ? "Set up your workspace and start monitoring"
+                : "Sign in to manage your organization's services"}
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5" htmlFor="tenant">
+                Organization Slug
+              </label>
+              <input
+                id="tenant"
+                placeholder="e.g. acme-corp"
+                value={tenantSlug}
+                onChange={(e) => setTenantSlug(e.target.value)}
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white focus:border-indigo-500 transition-all outline-none"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5" htmlFor="email">
+                Work Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                placeholder="name@company.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white focus:border-indigo-500 transition-all outline-none"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5" htmlFor="password">
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white focus:border-indigo-500 transition-all outline-none"
+                required
+              />
+            </div>
+
+            {error && (
+              <div className="p-4 bg-red-50 text-red-600 text-sm font-medium rounded-xl border border-red-100 italic">
+                {error}
+              </div>
+            )}
+
+            {success && (
+              <div className="p-4 bg-green-50 text-green-600 text-sm font-medium rounded-xl border border-green-100">
+                {success}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-slate-900 text-white font-bold py-3.5 rounded-xl hover:bg-slate-800 flex items-center justify-center gap-2 group transition-all disabled:opacity-70 disabled:cursor-not-allowed shadow-lg shadow-slate-900/10 active:scale-[0.98]"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span>{isRegister ? "Creating account..." : "Signing in..."}</span>
+                </>
+              ) : (
+                <>
+                  <span>{isRegister ? "Sign Up" : "Continue to Dashboard"}</span>
+                  {isRegister ? <UserPlus className="w-5 h-5" /> : <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />}
+                </>
+              )}
+            </button>
+
+            {!isRegister && (
+              <button
+                type="button"
+                onClick={handleDemoLogin}
+                disabled={loading}
+                className="w-full bg-white border border-slate-200 text-slate-600 font-bold py-3.5 rounded-xl hover:bg-slate-50 transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
+              >
+                <Eye className="w-5 h-5" />
+                <span>View Live Demo</span>
+              </button>
+            )}
+          </form>
+
+          <div className="mt-8 text-center text-sm text-slate-500">
+            {isRegister ? (
+              <>
+                Already have an account?{" "}
+                <button
+                  onClick={() => setIsRegister(false)}
+                  className="text-indigo-600 font-semibold hover:underline underline-offset-4"
+                >
+                  Log in
+                </button>
+              </>
+            ) : (
+              <>
+                Don't have an account?{" "}
+                <button
+                  onClick={() => setIsRegister(true)}
+                  className="text-indigo-600 font-semibold hover:underline underline-offset-4"
+                >
+                  Create one now
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
-
