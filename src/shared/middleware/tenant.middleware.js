@@ -4,7 +4,14 @@ export const tenantMiddleware = async (req, res, next) => {
   try {
     console.log("RAW TENANT HEADER:", req.headers["x-tenant-slug"]);
 
-    const tenantSlug = req.headers["x-tenant-slug"]?.toLowerCase().trim();
+    const tenantSlug = req.headers["x-tenant-slug"]?.toString().toLowerCase().trim();
+
+    if (!tenantSlug) {
+      return res.status(400).json({
+        error: "Tenant resolution failed",
+        message: "x-tenant-slug header is missing",
+      });
+    }
 
     const tenant = await resolveTenant(tenantSlug);
 

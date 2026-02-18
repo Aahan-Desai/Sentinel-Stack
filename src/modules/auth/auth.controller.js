@@ -18,11 +18,13 @@ const cookieOptions = {
 
 export const register = async (req, res) => {
   const { email, password, role } = req.body;
-  const tenantSlug = req.headers["x-tenant-slug"];
+  const rawSlug = req.headers["x-tenant-slug"];
 
-  if (!email || !password || !tenantSlug) {
+  if (!email || !password || !rawSlug) {
     throw new ApiError(400, "Email, password and tenantSlug are required");
   }
+
+  const tenantSlug = rawSlug.toString().toLowerCase().trim();
 
   // Resolve or create tenant
   let tenant = await Tenant.findOne({ slug: tenantSlug });
@@ -74,11 +76,13 @@ export const register = async (req, res) => {
 
 export const login = async (req, res) => {
   const { email, password } = req.body;
-  const tenantSlug = req.headers["x-tenant-slug"];
+  const rawSlug = req.headers["x-tenant-slug"];
 
-  if (!email || !password || !tenantSlug) {
+  if (!email || !password || !rawSlug) {
     throw new ApiError(400, "Email, password and tenantSlug are required");
   }
+
+  const tenantSlug = rawSlug.toString().toLowerCase().trim();
 
   // 1. Find tenant
   const tenant = await Tenant.findOne({ slug: tenantSlug });
